@@ -4,11 +4,14 @@
 
 #include <stdexcept>
 #include <cstdlib>
+#include <vector>
+#include <iostream>
 
 class Vulkan_program
 {
 public:
     void run();
+    void check_Extension();//检查支持的扩展
 
 private:
     const uint32_t WIDTH = 800;

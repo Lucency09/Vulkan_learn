@@ -13,5 +13,6 @@ int main() {
         return EXIT_FAILURE;
     }
 
+    app.check_Extension();
     return EXIT_SUCCESS;
 }
