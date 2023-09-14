@@ -1,5 +1,21 @@
 #include "Vulkan_Program.h"
 
+
+Vulkan_program::Vulkan_program()
+{
+    return;
+}
+
+void Vulkan_program::Init()
+{
+    toy2d::Context::Init();
+}
+
+void Vulkan_program::Quit()
+{
+    toy2d::Context::Quit();
+}
+
 void Vulkan_program::run()
 {
     initWindow();
@@ -20,7 +36,8 @@ void Vulkan_program::initWindow()
 
 void Vulkan_program::initVulkan()
 {
-    createInstance();
+    this->Init();
+    this->instance = toy2d::Context::GetInstance().get_instance();
 }
 
 void Vulkan_program::mainLoop()
@@ -33,44 +50,14 @@ void Vulkan_program::mainLoop()
 
 void Vulkan_program::cleanup()
 {
-    vkDestroyInstance(instance, nullptr);
+    this->Quit();
+
     glfwDestroyWindow(this->window);
     glfwTerminate();
 }
 
-void Vulkan_program::createInstance()
-{
-    //设置应用程序信息，例如名称、版本
-    VkApplicationInfo appInfo{};
-    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;//枚举，说明结构体类型
-    appInfo.pApplicationName = "Hello Triangle";
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.pEngineName = "No Engine";
-    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_API_VERSION_1_0;
 
-    //设置Vulkan实例的创建参数
-    VkInstanceCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO; // 枚举，说明结构体类型
-    createInfo.pApplicationInfo = &appInfo;//此处使用上诉创建的VkApplicationInfo变量
-
-    //使用glfw库指定与Windows交互的扩展
-    uint32_t glfwExtensionCount = 0;//用于存储与windows扩展的个数
-    const char** glfwExtensions;//用于存储与windows扩展的名称列表
-    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);//调用glfw获取扩展以修改glfwExtensionCount和glfwExtensions
-    createInfo.enabledExtensionCount = glfwExtensionCount;//设置扩展个数
-    createInfo.ppEnabledExtensionNames = glfwExtensions;//设置扩展名称
-
-    createInfo.enabledLayerCount = 0;//指定全局校验层
-
-    VkResult result = vkCreateInstance(&createInfo,nullptr, &this->instance);//创建vulkan实例
-
-    if (result != VK_SUCCESS) {
-        throw std::runtime_error("failed to create instance!");
-    }
-}
-
-void Vulkan_program::check_Extension()
+void check_Extension()
 {
     //检查被支持的扩展数量
     uint32_t extensionCount = 0;
@@ -82,7 +69,40 @@ void Vulkan_program::check_Extension()
 
     //打印被支持的扩展
     std::cout << "available extensions:\n";
-    for (const auto& extension : extensions) {
+    for (const VkExtensionProperties& extension : extensions)
+    {
         std::cout << '\t' << extension.extensionName << '\n';
     }
+}
+
+bool checkValidationLayerSupport() 
+{
+    //检查被支持的扩展数量
+    uint32_t layerCount;
+    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+    //获取被支持的扩展名称
+    std::vector<VkLayerProperties> availableLayers(layerCount);
+    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+    //判断需要支持的扩展validationLayers是否都在被支持的扩展availableLayers中
+    for (const char* layerName : validationLayers) 
+    {
+        bool layerFound = false;
+
+        for (const VkLayerProperties& layerProperties : availableLayers)
+        {//遍历支持的扩展
+            if (strcmp(layerName, layerProperties.layerName) == 0) 
+            {
+                layerFound = true;
+                break;
+            }
+        }
+        if (!layerFound) 
+        {
+            return false;
+        }
+    }
+    return true;
+
 }

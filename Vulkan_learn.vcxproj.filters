@@ -13,17 +13,32 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="源文件\Vulkan">
+      <UniqueIdentifier>{35300e12-3c07-4984-ae72-25fc101b20c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\sandbox">
+      <UniqueIdentifier>{8710bd75-8c08-4568-9ca5-f57fddbc3cf8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Vulkan_Program.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Vulkan_Program.cpp">
+      <Filter>源文件\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\test.cpp">
+      <Filter>源文件\sandbox</Filter>
+    </ClCompile>
+    <ClCompile Include="src\context.cpp">
+      <Filter>源文件\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Vulkan_Program.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\context.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
