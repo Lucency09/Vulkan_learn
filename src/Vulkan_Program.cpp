@@ -56,7 +56,6 @@ void Vulkan_program::cleanup()
     glfwTerminate();
 }
 
-
 void check_Extension()
 {
     //检查被支持的扩展数量
