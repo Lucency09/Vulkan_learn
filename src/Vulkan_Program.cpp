@@ -8,7 +8,8 @@ Vulkan_program::Vulkan_program()
 
 void Vulkan_program::Init()
 {
-    toy2d::Context::Init();
+    check_glfwExtension();
+    toy2d::Context::Init(glfwExtensions_vec);
 }
 
 void Vulkan_program::Quit()
@@ -56,6 +57,19 @@ void Vulkan_program::cleanup()
     glfwTerminate();
 }
 
+void Vulkan_program::check_glfwExtension()
+{
+    uint32_t glfwExtensionCount = 0;
+    const char** glfwExtensions;
+    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    glfwExtensions_vec.reserve(glfwExtensionCount);
+    std::copy(glfwExtensions, glfwExtensions + glfwExtensionCount, std::back_inserter(glfwExtensions_vec));
+    for (const auto glfwExtension : glfwExtensions_vec)
+    {
+        std::cout << glfwExtension << std::endl;
+    }
+}
+
 void check_Extension()
 {
     //检查被支持的扩展数量
@@ -65,7 +79,7 @@ void check_Extension()
     //获取被支持的扩展名称
     std::vector<VkExtensionProperties> extensions(extensionCount);
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
-
+    
     //打印被支持的扩展
     std::cout << "available extensions:\n";
     for (const VkExtensionProperties& extension : extensions)
@@ -105,3 +119,4 @@ bool checkValidationLayerSupport()
     return true;
 
 }
+

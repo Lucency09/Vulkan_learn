@@ -5,6 +5,8 @@
 int main() {
     Vulkan_program app;
 
+
+
     try {
         app.run();
     }
@@ -12,7 +14,6 @@ int main() {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
-
-    check_Extension();
+    //check_Extension();
     return EXIT_SUCCESS;
 }

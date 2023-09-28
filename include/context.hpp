@@ -4,12 +4,14 @@
 #include <iostream>
 #include <optional>
 
+#include "tool.hpp"
+
 namespace toy2d
 {
 	class Context final
 	{
 	public:
-		static void Init();
+		static void Init(std::vector<const char*>& glfwExtensions);
 		static void Quit();
 		static Context& GetInstance();
 		vk::Instance get_instance();//返回Vulkan句柄
@@ -21,7 +23,7 @@ namespace toy2d
 			std::optional<uint32_t> graphicsQueue;
 		};
 
-		Context();
+		Context(std::vector<const char*>& glfwExtensions);
 		static Context* instance_;//存储自身
 		vk::Instance instance = nullptr;//存储Vulkan句柄
 		vk::PhysicalDevice phyDevice;//存储物理设备
@@ -29,7 +31,7 @@ namespace toy2d
 		vk::Queue graphcisQueue;//图像命令列表
 		QueueFamliyIndices queueFamilyIndices;//存储命令队列
 
-		void createInstance();//创建Vulkan句柄
+		void createInstance(std::vector<const char*>& glfwExtensions);//创建Vulkan句柄
 		void pickupPhyiscalDevice();//选择物理设备
 		void creatDevice();//创建逻辑设备
 		void getQueues();//设置graphcisQueue值

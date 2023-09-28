@@ -4,9 +4,9 @@
 namespace toy2d
 {
 	Context* Context::instance_ = nullptr;
-	void Context::Init()
+	void Context::Init(std::vector<const char*>& glfwExtensions)
 	{
-		instance_ = new Context;
+		instance_ = new Context(glfwExtensions);
 	}
 
 	void Context::Quit()
@@ -25,16 +25,16 @@ namespace toy2d
 		return instance;
 	}
 
-	Context::Context()
+	Context::Context(std::vector<const char*>& glfwExtensions)
 	{
-		createInstance();
+		createInstance(glfwExtensions);
 		pickupPhyiscalDevice();
 		queryQueueFamilyIndices();
 		creatDevice();
 		getQueues();
 	}
 
-	void Context::createInstance()
+	void Context::createInstance(std::vector<const char*>& glfwExtensions)
 	{
 		vk::InstanceCreateInfo createInfo;
 		/*查询所有支持的层，暂时不用
@@ -49,7 +49,11 @@ namespace toy2d
 		createInfo.setPApplicationInfo(&appInfo);
 
 		std::vector<const char*> layers = { "VK_LAYER_KHRONOS_validation" };//调试用的验证层
-		createInfo.setPEnabledLayerNames(layers);//把验证层加载进去
+		RemoveNosupportedElems<const char*, vk::LayerProperties>(layers, vk::enumerateInstanceLayerProperties(), //查询所有支持的层，暂时不用
+			[](const char* e1, const vk::LayerProperties& e2)
+				{return std::strcmp(e1, e2.layerName) == 0;});//清除用不上的层
+		createInfo.setPEnabledLayerNames(layers)//把验证层加载进去
+					.setPEnabledExtensionNames(glfwExtensions);
 
 		instance = vk::createInstance(createInfo);//创建Vulkan句柄
 	}
@@ -61,9 +65,9 @@ namespace toy2d
 		for (auto& device : devices)
 		{
 			auto feature = device.getFeatures();//设备支持的特性
-			std::cout << device.getProperties().deviceName;//打印设备名称
-			std::cout << "  " << device.getProperties().deviceID;//设备ID
-			std::cout << "  " << device.getProperties().apiVersion << std::endl;//api版本
+			//std::cout << device.getProperties().deviceName;//打印设备名称
+			//std::cout << "  " << device.getProperties().deviceID;//设备ID
+			//std::cout << "  " << device.getProperties().apiVersion << std::endl;//api版本
 		}
 		//
 		phyDevice = devices[0];//只有一张显卡，故设置为第一张
