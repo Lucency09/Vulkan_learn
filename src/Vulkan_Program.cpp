@@ -8,8 +8,16 @@ Vulkan_program::Vulkan_program()
 
 void Vulkan_program::Init()
 {
-    check_glfwExtension();
-    toy2d::Context::Init(glfwExtensions_vec);
+    check_glfwExtension();//初始化glfwExtensions_vec
+    toy2d::Context::Init(glfwExtensions_vec,
+        [&](vk::Instance instance) {
+            VkSurfaceKHR surface;
+            if (glfwCreateWindowSurface(instance, window, NULL,&surface)) 
+            { //vulkan句柄;glfw窗口;内存分配器(NULL为默认分配器);用于存储vulkan窗口表面
+                throw std::runtime_error("can't create surface");
+            }
+            return surface;
+        });
 }
 
 void Vulkan_program::Quit()
@@ -51,19 +59,21 @@ void Vulkan_program::mainLoop()
 
 void Vulkan_program::cleanup()
 {
+    
     this->Quit();
-
     glfwDestroyWindow(this->window);
     glfwTerminate();
+    
 }
 
 void Vulkan_program::check_glfwExtension()
 {
-    uint32_t glfwExtensionCount = 0;
-    const char** glfwExtensions;
-    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-    glfwExtensions_vec.reserve(glfwExtensionCount);
+    uint32_t glfwExtensionCount = 0; //扩展数量
+    const char** glfwExtensions;// 具体扩展
+    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);//更新上述两个值
+    glfwExtensions_vec.reserve(glfwExtensionCount);//成员变量，reserve指定大小
     std::copy(glfwExtensions, glfwExtensions + glfwExtensionCount, std::back_inserter(glfwExtensions_vec));
+    //拷贝，char**转vector
     for (const auto glfwExtension : glfwExtensions_vec)
     {
         std::cout << glfwExtension << std::endl;

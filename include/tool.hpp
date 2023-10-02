@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <vector>
 #include <functional>
+#include "vulkan/vulkan.hpp" 
 
+typedef std::function<vk::SurfaceKHR(vk::Instance)> CreateSurfaceFunc;
 namespace toy2d 
 {
 

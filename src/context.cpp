@@ -4,15 +4,16 @@
 namespace toy2d
 {
 	Context* Context::instance_ = nullptr;
-	void Context::Init(std::vector<const char*>& glfwExtensions)
+	void Context::Init(std::vector<const char*>& glfwExtensions, CreateSurfaceFunc func)
 	{
-		instance_ = new Context(glfwExtensions);
+		instance_ = new Context(glfwExtensions, func);
 	}
 
 	void Context::Quit()
 	{
 		delete instance_;
 		instance_ = nullptr;
+		
 	}
 
 	Context& Context::GetInstance()
@@ -25,10 +26,11 @@ namespace toy2d
 		return instance;
 	}
 
-	Context::Context(std::vector<const char*>& glfwExtensions)
+	Context::Context(std::vector<const char*>& glfwExtensions, CreateSurfaceFunc func)
 	{
 		createInstance(glfwExtensions);
 		pickupPhyiscalDevice();
+		surface = func(instance);
 		queryQueueFamilyIndices();
 		creatDevice();
 		getQueues();
@@ -63,7 +65,7 @@ namespace toy2d
 		auto devices = instance.enumeratePhysicalDevices();//获取设备列表
 		//遍历所有设备
 		for (auto& device : devices)
-		{
+		{   
 			auto feature = device.getFeatures();//设备支持的特性
 			//std::cout << device.getProperties().deviceName;//打印设备名称
 			//std::cout << "  " << device.getProperties().deviceID;//设备ID
@@ -110,6 +112,7 @@ namespace toy2d
 
 	Context::~Context()
 	{
+		instance.destroySurfaceKHR(surface);
 		device.destroy();
 		instance.destroy();
 	}
