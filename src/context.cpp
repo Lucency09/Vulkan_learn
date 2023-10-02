@@ -80,13 +80,31 @@ namespace toy2d
 	{
 		vk::DeviceCreateInfo devicecreateInfo;
 		//createInfo.setPEnabledLayerNames();//继承creatInstance步骤中的信息，但可设置逻辑设备独有的验证
-		vk::DeviceQueueCreateInfo queueCreateInfo;//命令缓冲队列？
+		std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;//命令缓冲队列？
 		float priorities = 1.0;//优先级，最高1最低0
-		queueCreateInfo.setPQueuePriorities(&priorities)
-			.setQueueCount(1)//数量
-			.setQueueFamilyIndex(queueFamilyIndices.graphicsQueue.value());//类型
+		if (queueFamilyIndices.presentQueue.value() == queueFamilyIndices.graphicsQueue.value())
+		{//判断图形命令队列和命令队列是否一个队列，从而觉得为GPU创建几个命令队列
+			vk::DeviceQueueCreateInfo queueCreateInfo;
+			queueCreateInfo.setPQueuePriorities(&priorities)
+				.setQueueCount(1)//数量
+				.setQueueFamilyIndex(queueFamilyIndices.graphicsQueue.value());//类型
+			queueCreateInfos.push_back(std::move(queueCreateInfo));
+		}
+		else
+		{
+			vk::DeviceQueueCreateInfo queueCreateInfo;
+			queueCreateInfo.setPQueuePriorities(&priorities)
+				.setQueueCount(1)//数量
+				.setQueueFamilyIndex(queueFamilyIndices.graphicsQueue.value());//类型
+			queueCreateInfos.push_back(std::move(queueCreateInfo));
+			vk::DeviceQueueCreateInfo queueCreateInfo;
+			queueCreateInfo.setPQueuePriorities(&priorities)
+				.setQueueCount(1)//数量
+				.setQueueFamilyIndex(queueFamilyIndices.presentQueue.value());//类型
+			queueCreateInfos.push_back(queueCreateInfo);
+		}
 
-		devicecreateInfo.setQueueCreateInfos(queueCreateInfo);
+		devicecreateInfo.setQueueCreateInfos(queueCreateInfos);
 		device = phyDevice.createDevice(devicecreateInfo);
 	}
 
@@ -99,6 +117,13 @@ namespace toy2d
 			if (property.queueFlags | vk::QueueFlagBits::eGraphics)
 			{
 				queueFamilyIndices.graphicsQueue = i;
+			}
+			if (phyDevice.getSurfaceSupportKHR(i, surface))
+			{
+				queueFamilyIndices.presentQueue = i;
+			}
+			if (queueFamilyIndices)
+			{
 				break;
 			}
 		}
@@ -108,6 +133,7 @@ namespace toy2d
 	void Context::getQueues()
 	{
 		graphcisQueue = device.getQueue(queueFamilyIndices.graphicsQueue.value(), 0);
+		presentQueue = device.getQueue(queueFamilyIndices.presentQueue.value(), 0);
 	}
 
 	Context::~Context()
