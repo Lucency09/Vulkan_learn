@@ -33,6 +33,9 @@
     <ClCompile Include="src\context.cpp">
       <Filter>源文件\Vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="src\swapchain.cpp">
+      <Filter>源文件\Vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Vulkan_Program.h">
@@ -42,6 +45,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\tool.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\swapchain.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
