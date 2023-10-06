@@ -26,6 +26,16 @@ namespace toy2d
 		return instance;
 	}
 
+	vk::SurfaceKHR Context::get_surface()
+	{
+		return surface;
+	}
+
+	vk::PhysicalDevice& Context::get_phyDevice()
+	{
+		return phyDevice;
+	}
+
 	Context::Context(std::vector<const char*>& glfwExtensions, CreateSurfaceFunc func)
 	{
 		createInstance(glfwExtensions);
@@ -115,7 +125,7 @@ namespace toy2d
 		{
 			const auto& property = properties[i];
 			if (property.queueFlags | vk::QueueFlagBits::eGraphics)
-			{
+			{//判断是否支持图像队列,当前看作固定写法
 				queueFamilyIndices.graphicsQueue = i;
 			}
 			if (phyDevice.getSurfaceSupportKHR(i, surface))

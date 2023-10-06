@@ -13,8 +13,10 @@ namespace toy2d
 	public:
 		static void Init(std::vector<const char*>& glfwExtensions, CreateSurfaceFunc func);
 		static void Quit();
-		static Context& GetInstance();
+		static Context& GetInstance();//返回自身实例
 		vk::Instance get_instance();//返回Vulkan句柄
+		vk::SurfaceKHR get_surface();
+		vk::PhysicalDevice& get_phyDevice();
 		~Context();
 		
 	private:
