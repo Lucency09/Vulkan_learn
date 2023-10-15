@@ -33,10 +33,16 @@ namespace toy2d
 
 		swapchain = Context::GetInstance().get_device().createSwapchainKHR(createInfo);
 	}
+
 	Swapchain::~Swapchain()
 	{
+		for (const auto& view : imageviews)
+		{
+			Context::GetInstance().get_device().destroyImageView(view);
+		}
 		Context::GetInstance().get_device().destroySwapchainKHR(swapchain);
 	}
+
 	void Swapchain::queryInfo(int w, int h)
 	{
 		vk::PhysicalDevice& phyDevice =  Context::GetInstance().get_phyDevice();//获取GPU
@@ -70,6 +76,33 @@ namespace toy2d
 				info.present = present;
 				break;
 			}
+		}
+	}
+
+	void Swapchain::getImages()
+	{
+		images = Context::GetInstance().get_device().getSwapchainImagesKHR(swapchain);
+	}
+
+	void Swapchain::createImageViews()
+	{
+		imageviews.resize(images.size());
+		for (int i = 0; i < images.size(); i++)
+		{
+			vk::ImageViewCreateInfo creatinfo;
+			vk::ComponentMapping mapping;//用于更改颜色通道的映射？默认RGBA不更改
+			vk::ImageSubresourceRange range;
+			range.setBaseMipLevel(0)//基础mipmap级别
+				.setLayerCount(1)//mipmap层数
+				.setBaseArrayLayer(0)// 这个函数设置了子资源范围的基础数组层级为0，也就是第一个数组元素。数组层级用于存储多个图像资源，例如立方体贴图或3D纹理。
+				.setLayerCount(1)//这个函数设置了子资源范围的数组层级数为1，也就是只有一个数组元素。如果要访问多个数组元素，需要根据实际情况设置这个参数。
+				.setAspectMask(vk::ImageAspectFlagBits::eColor);//这个函数设置了子资源范围的子资源类型为颜色，也就是只访问图像资源中的颜色数据。其他可能的类型包括深度、模板或元数据等。
+			creatinfo.setImage(images[i])
+				.setViewType(vk::ImageViewType::e2D)//2D图像
+				.setComponents(mapping)
+				.setFormat(info.format.format)
+				.setSubresourceRange(range);
+			imageviews[i] = Context::GetInstance().get_device().createImageView(creatinfo);
 		}
 	}
 }

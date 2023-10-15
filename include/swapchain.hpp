@@ -13,7 +13,7 @@ namespace toy2d
 		Swapchain(int w, int h);//传参为画布大小
 		~Swapchain();
 
-		void queryInfo(int w, int h);
+
 	private:
 		struct SwapchainInfo {
 			vk::Extent2D imageExtent;//图像大小
@@ -22,8 +22,14 @@ namespace toy2d
 			vk::SurfaceTransformFlagBitsKHR transform;//几何变换方式
 			vk::PresentModeKHR present;//用于(显卡->屏幕)
 		};
+
 		SwapchainInfo info;
 		vk::SwapchainKHR swapchain;//用于存储交换链
-		
+		std::vector<vk::Image> images;
+		std::vector<vk::ImageView> imageviews;
+
+		void queryInfo(int w, int h);
+		void getImages();
+		void createImageViews();
 	};
 }
