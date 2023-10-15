@@ -18,10 +18,12 @@ void Vulkan_program::Init()
             }
             return surface;
         });
+    toy2d::Context::GetInstance().InitSwapchain(1024, 720);
 }
 
 void Vulkan_program::Quit()
 {
+    toy2d::Context::GetInstance().DestroySwapchain();
     toy2d::Context::Quit();
 }
 

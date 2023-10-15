@@ -26,7 +26,7 @@ namespace toy2d
 		return instance;
 	}
 
-	vk::SurfaceKHR Context::get_surface()
+	vk::SurfaceKHR& Context::get_surface()
 	{
 		return surface;
 	}
@@ -34,6 +34,11 @@ namespace toy2d
 	vk::PhysicalDevice& Context::get_phyDevice()
 	{
 		return phyDevice;
+	}
+
+	vk::Device& Context::get_device()
+	{
+		return device;
 	}
 
 	Context::Context(std::vector<const char*>& glfwExtensions, CreateSurfaceFunc func)
@@ -44,6 +49,13 @@ namespace toy2d
 		queryQueueFamilyIndices();
 		creatDevice();
 		getQueues();
+	}
+
+	Context::~Context()
+	{
+		instance.destroySurfaceKHR(surface);
+		device.destroy();
+		instance.destroy();
 	}
 
 	void Context::createInstance(std::vector<const char*>& glfwExtensions)
@@ -90,6 +102,7 @@ namespace toy2d
 	{
 		vk::DeviceCreateInfo devicecreateInfo;
 		//createInfo.setPEnabledLayerNames();//继承creatInstance步骤中的信息，但可设置逻辑设备独有的验证
+		std::array extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };//启用交换链扩展
 		std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;//命令缓冲队列？
 		float priorities = 1.0;//优先级，最高1最低0
 		if (queueFamilyIndices.presentQueue.value() == queueFamilyIndices.graphicsQueue.value())
@@ -106,15 +119,16 @@ namespace toy2d
 			queueCreateInfo.setPQueuePriorities(&priorities)
 				.setQueueCount(1)//数量
 				.setQueueFamilyIndex(queueFamilyIndices.graphicsQueue.value());//类型
-			queueCreateInfos.push_back(std::move(queueCreateInfo));
-			vk::DeviceQueueCreateInfo queueCreateInfo;
+			queueCreateInfos.push_back(queueCreateInfo);
+			
 			queueCreateInfo.setPQueuePriorities(&priorities)
 				.setQueueCount(1)//数量
 				.setQueueFamilyIndex(queueFamilyIndices.presentQueue.value());//类型
 			queueCreateInfos.push_back(queueCreateInfo);
 		}
 
-		devicecreateInfo.setQueueCreateInfos(queueCreateInfos);
+		devicecreateInfo.setQueueCreateInfos(queueCreateInfos)//设置命令队列
+					.setPEnabledExtensionNames(extensions);//设置交换链
 		device = phyDevice.createDevice(devicecreateInfo);
 	}
 
@@ -140,18 +154,25 @@ namespace toy2d
 
 	}
 
+	QueueFamliyIndices& Context::get_queueFamilyIndices()
+	{
+		return queueFamilyIndices;
+	}
+
+	void Context::InitSwapchain(int w, int h)
+	{
+		
+		swapchain.reset(new Swapchain(w, h));
+	}
+
+	void Context::DestroySwapchain()
+	{
+		swapchain.reset();
+	}
+
 	void Context::getQueues()
 	{
 		graphcisQueue = device.getQueue(queueFamilyIndices.graphicsQueue.value(), 0);
 		presentQueue = device.getQueue(queueFamilyIndices.presentQueue.value(), 0);
 	}
-
-	Context::~Context()
-	{
-		instance.destroySurfaceKHR(surface);
-		device.destroy();
-		instance.destroy();
-	}
-
-
 }
