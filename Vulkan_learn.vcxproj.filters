@@ -36,6 +36,9 @@
     <ClCompile Include="src\swapchain.cpp">
       <Filter>源文件\Vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="src\shader.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Vulkan_Program.h">
@@ -50,5 +53,12 @@
     <ClInclude Include="include\swapchain.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\shader.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\Shader\Vertex01.shader" />
+    <None Include="res\Shader\Fragment.shader" />
   </ItemGroup>
 </Project>

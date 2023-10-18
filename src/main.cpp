@@ -2,11 +2,13 @@
 #include <iostream>
 
 
-int main() {
+int main() 
+{
+
+    toy2d::comile_shader("res/Shader/", "res/Spir-v/");
+
+    
     Vulkan_program app;
-
-
-
     try {
         app.run();
     }

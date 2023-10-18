@@ -137,15 +137,21 @@
   <ItemGroup>
     <ClCompile Include="src\context.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\shader.cpp" />
     <ClCompile Include="src\swapchain.cpp" />
     <ClCompile Include="src\Vulkan_Program.cpp" />
     <ClCompile Include="src\test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\context.hpp" />
+    <ClInclude Include="include\shader.hpp" />
     <ClInclude Include="include\swapchain.hpp" />
     <ClInclude Include="include\tool.hpp" />
     <ClInclude Include="include\Vulkan_Program.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\Shader\Fragment.shader" />
+    <None Include="res\Shader\Vertex01.shader" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
