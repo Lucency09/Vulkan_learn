@@ -10,6 +10,7 @@
 #include <iostream>
 
 #include "context.hpp"
+#include "render_process.hpp"
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
@@ -35,6 +36,7 @@ private:
     VkInstance instance;//存储Vulkan实例，通过context获取
     GLFWwindow* window;
     std::vector<const char*> glfwExtensions_vec;//存储需要的扩展
+    toy2d::RenderProcess render_process;
 
 
     void initWindow();//glfw创建窗口的一些操作

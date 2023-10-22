@@ -37,9 +37,9 @@ namespace toy2d
     
 
 
-    
+    //读取spir-v文件
     inline std::string Read_spv_File(const std::string& filename)
-    {//读取spir-v文件
+    {
         std::ifstream file(filename, std::ios::binary | std::ios::ate);
 
         if (!file.is_open()) 

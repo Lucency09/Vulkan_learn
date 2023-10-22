@@ -19,6 +19,8 @@ void Vulkan_program::Init()
             return surface;
         });
     toy2d::Context::GetInstance().InitSwapchain(1024, 720);
+    this->render_process.InitPipeLine(toy2d::Read_spv_File("res/Spir-v/Vertex01.spv"),
+        toy2d::Read_spv_File("res/Spir-v/Fragment01.spv"), 1024, 720);
 }
 
 void Vulkan_program::Quit()
