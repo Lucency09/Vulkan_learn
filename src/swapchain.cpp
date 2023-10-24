@@ -43,6 +43,11 @@ namespace toy2d
 		Context::GetInstance().get_device().destroySwapchainKHR(swapchain);
 	}
 
+	SwapchainInfo& Swapchain::get_info()
+	{
+		return this->info;
+	}
+
 	void Swapchain::queryInfo(int w, int h)
 	{
 		vk::PhysicalDevice& phyDevice =  Context::GetInstance().get_phyDevice();//ªÒ»°GPU

@@ -8,21 +8,21 @@ namespace toy2d
 		this->shader.Init(vertexSource, fragSource);//初始化shader程序
 		vk::GraphicsPipelineCreateInfo createinfo;
 	
-		//顶点输入
+		//1. 顶点输入
 		vk::PipelineVertexInputStateCreateInfo inputState;
 		createinfo.setPVertexInputState(&inputState);
 
-		//图元装配？	Vertex Assembly
+		//2. 图元装配？	Vertex Assembly
 		vk::PipelineInputAssemblyStateCreateInfo inputAsm;
 		inputAsm.setPrimitiveRestartEnable(false)//暂时不用
 			.setTopology(vk::PrimitiveTopology::eTriangleList);//设置图元类型,这里设置为三角形
 		createinfo.setPInputAssemblyState(&inputAsm);
 
-		//设置Shader
+		//3. 设置Shader
 		std::vector<vk::PipelineShaderStageCreateInfo> stages = this->shader.GetStage();
 		createinfo.setStages(stages);
 
-		// 4. viewport
+		//4. viewport
 		vk::PipelineViewportStateCreateInfo viewportState;
 		vk::Viewport viewport(0, 0, width, height, 0, 1);//设置尺寸
 		viewportState.setViewports(viewport);
@@ -31,7 +31,7 @@ namespace toy2d
 		viewportState.setScissors(rect);
 		createinfo.setPViewportState(&viewportState);
 
-		//光栅化处理	Rasterization
+		//5. 光栅化处理	Rasterization
 		vk::PipelineRasterizationStateCreateInfo rastInfo;
 		rastInfo.setRasterizerDiscardEnable(false)//是否抛弃光栅化结果
 			.setCullMode(vk::CullModeFlagBits::eBack)
@@ -40,15 +40,15 @@ namespace toy2d
 			.setLineWidth(1);//设置边线宽度
 		createinfo.setPRasterizationState(&rastInfo);
 
-		//多重采样	multisampel
+		//6. 多重采样	multisampel
 		vk::PipelineMultisampleStateCreateInfo multisample;
 		multisample.setSampleShadingEnable(false)//关闭多重采样
 			.setRasterizationSamples(vk::SampleCountFlagBits::e1);//设置光栅化阶段采样级别为1
 		createinfo.setPMultisampleState(&multisample);
 
-		//深度测试、模板测试(跳过)	depth test  stencil test
+		//7. 深度测试、模板测试(跳过)	depth test  stencil test
 
-		//色彩混合(透明、滤镜之类)	color blending
+		//8. 色彩混合(透明、滤镜之类)	color blending
 		vk::PipelineColorBlendStateCreateInfo blend;
 		vk::PipelineColorBlendAttachmentState attachs;
 
@@ -59,8 +59,11 @@ namespace toy2d
 							vk::ColorComponentFlagBits::eR);//纹理文件读取方式，这里4个通道都要读
 		blend.setLogicOpEnable(false)//关闭颜色融混
 			.setAttachments(attachs);
-
 		createinfo.setPColorBlendState(&blend);
+
+		//9. renderpass and layout
+		createinfo.setRenderPass(this->renderPass);
+		createinfo.setLayout(this->layout);
 
 		//实际创建渲染管线
 		vk::ResultValue<vk::Pipeline> result = Context::GetInstance().get_device().createGraphicsPipeline(nullptr, createinfo);
@@ -69,9 +72,54 @@ namespace toy2d
 		}
 		this->pipeline = result.value;
 	}
+
+	void RenderProcess::InitLayout()
+	{
+		vk::PipelineLayoutCreateInfo createinfo;
+		this->layout = Context::GetInstance().get_device().createPipelineLayout(createinfo);
+	}
+
+	void RenderProcess::InitRenderPass()
+	{
+		vk::RenderPassCreateInfo createInfo;
+		vk::AttachmentDescription attachDesc;//用于设置可以进入管线的纹理附件的描述
+		attachDesc.setFormat(Context::GetInstance().get_swapchain()->get_info().format.format)
+			.setInitialLayout(vk::ImageLayout::eUndefined)//进入渲染流程时的布局,这里设置的是未定义
+			.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal)//走出渲染流程时的布局，这里设置成颜色附件
+			.setLoadOp(vk::AttachmentLoadOp::eClear)//刚加载进来的时候清空所有颜色
+			.setStoreOp(vk::AttachmentStoreOp::eStore)//绘制完成后存下数据(eDontCar是不关心是否保存)
+			.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)//设置模板缓冲
+			.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)//设置模板测试结果是否保存
+			.setSamples(vk::SampleCountFlagBits::e1);//纹理采样方式
+		createInfo.setAttachments(attachDesc);
+
+		vk::AttachmentReference reference;//纹理引用
+		reference.setLayout(vk::ImageLayout::eColorAttachmentOptimal)//设置为颜色类型的纹理
+			.setAttachment(0);//使用第0个纹理(上方只创建了一个纹理附件attachDesc,若其类型是一个数组,该函数用于指定第几个)
+		vk::SubpassDescription subpass;
+		subpass.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)//设置在图像类型的渲染管线上
+			.setColorAttachments(reference);
+		createInfo.setSubpasses(subpass);
+
+		vk::SubpassDependency dependency;//当有多个subpass时用于指定执行顺序,除此之外vulkan中还有一些默认的渲染子流程
+		dependency.setSrcSubpass(VK_SUBPASS_EXTERNAL)//首先执行外部的subpass(VK_SUBPASS_EXTERNAL)
+			.setDstSubpass(0)//然后指向上方创建的 subpass
+			.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)//允许颜色写入
+			.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)//执行结束后输出到颜色附件上
+			.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);//执行结束后输出到颜色附件上
+		//上方Dst对应Dst,Src对应Src
+		createInfo.setDependencies(dependency);
+
+		this->renderPass = Context::GetInstance().get_device().createRenderPass(createInfo);//最终创建渲染流程
+	}
+
 	RenderProcess::~RenderProcess()
 	{
 		auto& device = Context::GetInstance().get_device();
-		device.destroyPipeline(pipeline);
+		
+		
+		device.destroyRenderPass(this->renderPass);
+		device.destroyPipelineLayout(this->layout);
+		device.destroyPipeline(this->pipeline);
 	}
 }

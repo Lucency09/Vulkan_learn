@@ -34,6 +34,7 @@ namespace toy2d
 		vk::PhysicalDevice& get_phyDevice();
 		vk::Device& get_device();
 		QueueFamliyIndices& get_queueFamilyIndices();
+		std::unique_ptr<Swapchain>& get_swapchain();
 		~Context();
 		
 	private:

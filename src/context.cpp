@@ -159,6 +159,11 @@ namespace toy2d
 		return queueFamilyIndices;
 	}
 
+	std::unique_ptr<Swapchain>& Context::get_swapchain()
+	{
+		return swapchain;
+	}
+
 	void Context::InitSwapchain(int w, int h)
 	{
 		

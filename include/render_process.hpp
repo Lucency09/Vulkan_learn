@@ -9,10 +9,14 @@ namespace toy2d
 	{
 	public:
 		void InitPipeLine(const std::string& vertexSource, const std::string& fragSource, int width, int height);
+		void InitLayout();
+		void InitRenderPass();
 		~RenderProcess();
 
 	private:
 		vk::Pipeline pipeline;
+		vk::PipelineLayout layout;//涉及uniform数据
+		vk::RenderPass renderPass;//渲染流程
 		vkShader shader;
 		
 	};
