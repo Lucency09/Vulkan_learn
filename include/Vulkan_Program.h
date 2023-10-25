@@ -26,6 +26,7 @@ class Vulkan_program
 {
 public:
     Vulkan_program();
+    ~Vulkan_program();
     void run();
     void Init();
     void Quit();

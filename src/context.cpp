@@ -13,7 +13,6 @@ namespace toy2d
 	{
 		delete instance_;
 		instance_ = nullptr;
-		
 	}
 
 	Context& Context::GetInstance()

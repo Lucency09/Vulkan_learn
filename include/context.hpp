@@ -35,11 +35,11 @@ namespace toy2d
 		vk::Device& get_device();
 		QueueFamliyIndices& get_queueFamilyIndices();
 		std::unique_ptr<Swapchain>& get_swapchain();
-		~Context();
+		
 		
 	private:
-
 		Context(std::vector<const char*>& glfwExtensions, CreateSurfaceFunc func);
+		~Context();
 		static Context* instance_;//存储自身
 		vk::Instance instance = nullptr;//存储Vulkan句柄
 		vk::PhysicalDevice phyDevice;//存储物理设备
@@ -54,8 +54,23 @@ namespace toy2d
 		void pickupPhyiscalDevice();//选择物理设备
 		void creatDevice();//创建逻辑设备
 		void getQueues();//设置graphcisQueue值
-
 		void queryQueueFamilyIndices();//查询支持的命令队列
+
+		//用于回收单例Context对象
+		class Garbo
+		{
+		public:
+			~Garbo()
+			{
+				if (Context::instance_)
+				{
+					delete Context::instance_;
+					Context::instance_ = nullptr;
+				}
+			}
+		};
+		//定义一个静态的嵌套类对象
+		static Garbo garbo_;
 
 	};
 }

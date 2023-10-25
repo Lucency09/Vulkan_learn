@@ -6,6 +6,11 @@ Vulkan_program::Vulkan_program()
     return;
 }
 
+Vulkan_program::~Vulkan_program()
+{
+    //this->cleanup();
+}
+
 void Vulkan_program::Init()
 {
     check_glfwExtension();//≥ı ºªØglfwExtensions_vec
@@ -29,7 +34,7 @@ void Vulkan_program::Init()
 void Vulkan_program::Quit()
 {
     toy2d::Context::GetInstance().DestroySwapchain();
-    toy2d::Context::Quit();
+    //toy2d::Context::Quit();
 }
 
 void Vulkan_program::run()
