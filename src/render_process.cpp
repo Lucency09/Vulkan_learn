@@ -113,6 +113,11 @@ namespace toy2d
 		this->renderPass = Context::GetInstance().get_device().createRenderPass(createInfo);//最终创建渲染流程
 	}
 
+	vk::RenderPass& RenderProcess::get_renderPass()
+	{
+		return renderPass;
+	}
+
 	RenderProcess::~RenderProcess()
 	{
 		auto& device = Context::GetInstance().get_device();

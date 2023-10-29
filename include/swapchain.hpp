@@ -23,17 +23,18 @@ namespace toy2d
 		~Swapchain();
 
 		SwapchainInfo& get_info();
+		void creatFramebuffers(int w, int h);
 
 	private:
-		
-
 		SwapchainInfo info;
 		vk::SwapchainKHR swapchain;//”√”⁄¥Ê¥¢Ωªªª¡¥
 		std::vector<vk::Image> images;
 		std::vector<vk::ImageView> imageviews;
+		std::vector<vk::Framebuffer> framebuffers;
 
 		void queryInfo(int w, int h);
 		void getImages();
 		void createImageViews();
+		
 	};
 }

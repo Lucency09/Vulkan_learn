@@ -11,6 +11,7 @@ namespace toy2d
 		void InitPipeLine(const std::string& vertexSource, const std::string& fragSource, int width, int height);
 		void InitLayout();
 		void InitRenderPass();
+		vk::RenderPass& get_renderPass();
 		~RenderProcess();
 
 	private:

@@ -1,5 +1,15 @@
 #include "swapchain.hpp"
 #include "context.hpp"
+
+/*
+framebuffer	帧缓冲
+attachment	纹理附件	Texture	vk::Image
+
+framebuffer需要:
+	1+个 Color Attachment
+	0+个 Stemcil/Depth Attachmen	模板/深度附件
+*/
+
 namespace toy2d
 {
 	Swapchain::Swapchain(int w, int h)
@@ -108,6 +118,19 @@ namespace toy2d
 				.setFormat(info.format.format)
 				.setSubresourceRange(range);
 			imageviews[i] = Context::GetInstance().get_device().createImageView(creatinfo);
+		}
+	}
+	void Swapchain::creatFramebuffers(int w, int h)
+	{
+		this->framebuffers.resize(images.size());
+		for (int i = 0; i < this->framebuffers.size(); i++) {
+			vk::FramebufferCreateInfo createInfo;
+			createInfo.setAttachments(this->imageviews[i])
+				.setWidth(w)
+				.setHeight(h)
+				.setRenderPass(Context::GetInstance().get_render_process().get_renderPass())
+				.setLayers(1);
+			framebuffers[i] = Context::GetInstance().get_device().createFramebuffer(createInfo);
 		}
 	}
 }

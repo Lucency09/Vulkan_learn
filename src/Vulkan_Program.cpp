@@ -25,10 +25,7 @@ void Vulkan_program::Init()
         });
     toy2d::Context::GetInstance().InitSwapchain(1024, 720);
 
-    this->render_process.InitRenderPass();
-    this->render_process.InitLayout();
-    this->render_process.InitPipeLine(toy2d::Read_spv_File("res/Spir-v/Vertex01.spv"),
-        toy2d::Read_spv_File("res/Spir-v/Fragment01.spv"), 1024, 720);
+    toy2d::Context::GetInstance().InitRender_process("res/Spir-v/Vertex01.spv", "res/Spir-v/Fragment01.spv", 1024, 720);
 }
 
 void Vulkan_program::Quit()

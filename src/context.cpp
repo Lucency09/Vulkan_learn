@@ -7,6 +7,7 @@ namespace toy2d
 	void Context::Init(std::vector<const char*>& glfwExtensions, CreateSurfaceFunc func)
 	{
 		instance_ = new Context(glfwExtensions, func);
+		
 	}
 
 	void Context::Quit()
@@ -163,6 +164,11 @@ namespace toy2d
 		return swapchain;
 	}
 
+	toy2d::RenderProcess& Context::get_render_process()
+	{
+		return render_process;
+	}
+
 	void Context::InitSwapchain(int w, int h)
 	{
 		
@@ -172,6 +178,15 @@ namespace toy2d
 	void Context::DestroySwapchain()
 	{
 		swapchain.reset();
+	}
+
+	void Context::InitRender_process(const std::string& vespath, const std::string& frapath, int h, int w)
+	{
+		std::cout << vespath << std::endl << frapath << std::endl;
+		instance_->render_process.InitRenderPass();
+		instance_->render_process.InitLayout();
+		instance_->render_process.InitPipeLine(toy2d::Read_spv_File(vespath),
+			toy2d::Read_spv_File(frapath), h, w);
 	}
 
 	void Context::getQueues()
