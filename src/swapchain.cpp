@@ -46,11 +46,19 @@ namespace toy2d
 
 	Swapchain::~Swapchain()
 	{
+		auto& device = Context::GetInstance().get_device();
+
+		for (auto& framebuffer : framebuffers)
+		{
+			device.destroyFramebuffer(framebuffer);
+		}
+
 		for (const auto& view : imageviews)
 		{
-			Context::GetInstance().get_device().destroyImageView(view);
+			device.destroyImageView(view);
 		}
-		Context::GetInstance().get_device().destroySwapchainKHR(swapchain);
+
+		device.destroySwapchainKHR(swapchain);
 	}
 
 	SwapchainInfo& Swapchain::get_info()

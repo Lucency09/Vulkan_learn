@@ -137,6 +137,7 @@
   <ItemGroup>
     <ClCompile Include="src\context.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\renderer.cpp" />
     <ClCompile Include="src\render_process.cpp" />
     <ClCompile Include="src\shader.cpp" />
     <ClCompile Include="src\swapchain.cpp" />
@@ -145,6 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\context.hpp" />
+    <ClInclude Include="include\renderer.hpp" />
     <ClInclude Include="include\render_process.hpp" />
     <ClInclude Include="include\shader.hpp" />
     <ClInclude Include="include\swapchain.hpp" />

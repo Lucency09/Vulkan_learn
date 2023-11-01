@@ -7,6 +7,7 @@
 #include "tool.hpp"
 #include "swapchain.hpp"
 #include "render_process.hpp"
+#include "renderer.hpp"
 
 namespace toy2d
 {
@@ -30,6 +31,7 @@ namespace toy2d
 		void DestroySwapchain(); //销毁交换链
 
 		void InitRender_process(const std::string& vespath, const std::string& frapath, int h, int w);//创建渲染流程
+		void InitRenderer();
 
 		static Context& GetInstance();//返回自身实例
 		vk::Instance get_instance();//返回Vulkan句柄
@@ -53,13 +55,15 @@ namespace toy2d
 		vk::SurfaceKHR surface;//用于存储vulkan画布
 		std::unique_ptr<Swapchain> swapchain;//用于存储交换链
 		QueueFamliyIndices queueFamilyIndices;//存储命令队列
+		std::unique_ptr <RenderProcess> render_process;//存储渲染流程
+		std::unique_ptr<Renderer> renderer;
 
 		void createInstance(std::vector<const char*>& glfwExtensions);//创建Vulkan句柄
 		void pickupPhyiscalDevice();//选择物理设备
 		void creatDevice();//创建逻辑设备
 		void getQueues();//设置graphcisQueue值
 		void queryQueueFamilyIndices();//查询支持的命令队列
-		toy2d::RenderProcess render_process;//存储渲染流程
+		
 
 		//用于回收单例Context对象
 		class Garbo

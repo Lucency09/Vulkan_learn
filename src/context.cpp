@@ -7,11 +7,14 @@ namespace toy2d
 	void Context::Init(std::vector<const char*>& glfwExtensions, CreateSurfaceFunc func)
 	{
 		instance_ = new Context(glfwExtensions, func);
-		
 	}
 
 	void Context::Quit()
 	{
+		instance_->renderer.reset();
+		instance_->render_process.reset();
+		instance_->DestroySwapchain();
+
 		delete instance_;
 		instance_ = nullptr;
 	}
@@ -56,6 +59,7 @@ namespace toy2d
 		instance.destroySurfaceKHR(surface);
 		device.destroy();
 		instance.destroy();
+		Quit();
 	}
 
 	void Context::createInstance(std::vector<const char*>& glfwExtensions)
@@ -166,7 +170,7 @@ namespace toy2d
 
 	toy2d::RenderProcess& Context::get_render_process()
 	{
-		return render_process;
+		return *render_process;
 	}
 
 	void Context::InitSwapchain(int w, int h)
@@ -182,11 +186,17 @@ namespace toy2d
 
 	void Context::InitRender_process(const std::string& vespath, const std::string& frapath, int h, int w)
 	{
+		render_process.reset(new RenderProcess);
 		std::cout << vespath << std::endl << frapath << std::endl;
-		instance_->render_process.InitRenderPass();
-		instance_->render_process.InitLayout();
-		instance_->render_process.InitPipeLine(toy2d::Read_spv_File(vespath),
+		instance_->render_process->InitRenderPass();
+		instance_->render_process->InitLayout();
+		instance_->render_process->InitPipeLine(toy2d::Read_spv_File(vespath),
 			toy2d::Read_spv_File(frapath), h, w);
+	}
+
+	void Context::InitRenderer()
+	{
+		renderer.reset(new Renderer);
 	}
 
 	void Context::getQueues()
