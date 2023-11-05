@@ -12,6 +12,9 @@ namespace toy2d
 		void InitLayout();
 		void InitRenderPass();
 		vk::RenderPass& get_renderPass();
+		vk::Pipeline& get_pipeline();
+
+
 		~RenderProcess();
 
 	private:

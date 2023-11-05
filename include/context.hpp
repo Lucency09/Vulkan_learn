@@ -38,9 +38,12 @@ namespace toy2d
 		vk::SurfaceKHR& get_surface();
 		vk::PhysicalDevice& get_phyDevice();
 		vk::Device& get_device();
+		vk::Queue& get_graphcisQueue();
+		vk::Queue& get_presentQueue();
 		QueueFamliyIndices& get_queueFamilyIndices();
 		std::unique_ptr<Swapchain>& get_swapchain();
-		toy2d::RenderProcess& get_render_process();
+		RenderProcess& get_render_process();
+		Renderer& get_renderer();
 		
 		
 	private:

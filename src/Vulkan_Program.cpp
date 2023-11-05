@@ -23,6 +23,7 @@ void Vulkan_program::Init()
             }
             return surface;
         });
+
     toy2d::Context::GetInstance().InitSwapchain(1024, 720);
 
     toy2d::Context::GetInstance().InitRender_process("res/Spir-v/Vertex01.spv", "res/Spir-v/Fragment01.spv", 1024, 720);
@@ -62,9 +63,11 @@ void Vulkan_program::initVulkan()
 
 void Vulkan_program::mainLoop()
 {
+    auto& render = toy2d::Context::GetInstance().get_renderer();
     while (!glfwWindowShouldClose(this->window))
     {
         glfwPollEvents();
+        render.Render();
     }
 }
 

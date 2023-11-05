@@ -42,6 +42,10 @@ namespace toy2d
 		}
 
 		swapchain = Context::GetInstance().get_device().createSwapchainKHR(createInfo);
+
+		this->getImages();
+		this->createImageViews();
+		
 	}
 
 	Swapchain::~Swapchain()
@@ -140,5 +144,13 @@ namespace toy2d
 				.setLayers(1);
 			framebuffers[i] = Context::GetInstance().get_device().createFramebuffer(createInfo);
 		}
+	}
+	vk::SwapchainKHR& Swapchain::get_swapchain()
+	{
+		return this->swapchain;
+	}
+	std::vector<vk::Framebuffer>& Swapchain::get_framebuffers()
+	{
+		return this->framebuffers;
 	}
 }

@@ -44,6 +44,16 @@ namespace toy2d
 		return device;
 	}
 
+	vk::Queue& Context::get_graphcisQueue()
+	{
+		return graphcisQueue;
+	}
+
+	vk::Queue& Context::get_presentQueue()
+	{
+		return presentQueue;
+	}
+
 	Context::Context(std::vector<const char*>& glfwExtensions, CreateSurfaceFunc func)
 	{
 		createInstance(glfwExtensions);
@@ -173,6 +183,11 @@ namespace toy2d
 		return *render_process;
 	}
 
+	Renderer& Context::get_renderer()
+	{
+		return *renderer;
+	}
+
 	void Context::InitSwapchain(int w, int h)
 	{
 		
@@ -192,6 +207,7 @@ namespace toy2d
 		instance_->render_process->InitLayout();
 		instance_->render_process->InitPipeLine(toy2d::Read_spv_File(vespath),
 			toy2d::Read_spv_File(frapath), h, w);
+		instance_->get_swapchain()->creatFramebuffers(w, h);
 	}
 
 	void Context::InitRenderer()

@@ -25,6 +25,9 @@ namespace toy2d
 		SwapchainInfo& get_info();
 		void creatFramebuffers(int w, int h);
 
+		vk::SwapchainKHR& get_swapchain();
+		std::vector<vk::Framebuffer>& get_framebuffers();
+
 	private:
 		SwapchainInfo info;
 		vk::SwapchainKHR swapchain;//”√”⁄¥Ê¥¢Ωªªª¡¥

@@ -35,7 +35,7 @@ namespace toy2d
 		vk::PipelineRasterizationStateCreateInfo rastInfo;
 		rastInfo.setRasterizerDiscardEnable(false)//是否抛弃光栅化结果
 			.setCullMode(vk::CullModeFlagBits::eBack)
-			.setFrontFace(vk::FrontFace::eCounterClockwise)//设置逆时针为正面
+			.setFrontFace(vk::FrontFace::eClockwise)//设置正面
 			.setPolygonMode(vk::PolygonMode::eFill)//设置填充模式,这里设置为全部填充
 			.setLineWidth(1);//设置边线宽度
 		createinfo.setPRasterizationState(&rastInfo);
@@ -85,7 +85,7 @@ namespace toy2d
 		vk::AttachmentDescription attachDesc;//用于设置可以进入管线的纹理附件的描述
 		attachDesc.setFormat(Context::GetInstance().get_swapchain()->get_info().format.format)
 			.setInitialLayout(vk::ImageLayout::eUndefined)//进入渲染流程时的布局,这里设置的是未定义
-			.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal)//走出渲染流程时的布局，这里设置成颜色附件
+			.setFinalLayout(vk::ImageLayout::ePresentSrcKHR)//走出渲染流程时的布局，这里设置成显示附件
 			.setLoadOp(vk::AttachmentLoadOp::eClear)//刚加载进来的时候清空所有颜色
 			.setStoreOp(vk::AttachmentStoreOp::eStore)//绘制完成后存下数据(eDontCar是不关心是否保存)
 			.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)//设置模板缓冲
@@ -111,11 +111,18 @@ namespace toy2d
 		createInfo.setDependencies(dependency);
 
 		this->renderPass = Context::GetInstance().get_device().createRenderPass(createInfo);//最终创建渲染流程
+
+		
 	}
 
 	vk::RenderPass& RenderProcess::get_renderPass()
 	{
 		return renderPass;
+	}
+
+	vk::Pipeline& RenderProcess::get_pipeline()
+	{
+		return this->pipeline;
 	}
 
 	RenderProcess::~RenderProcess()
