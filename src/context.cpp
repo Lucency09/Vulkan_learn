@@ -11,6 +11,7 @@ namespace toy2d
 
 	void Context::Quit()
 	{
+		instance_->device.waitIdle();
 		instance_->renderer.reset();
 		instance_->render_process.reset();
 		instance_->DestroySwapchain();
@@ -206,7 +207,7 @@ namespace toy2d
 		instance_->render_process->InitRenderPass();
 		instance_->render_process->InitLayout();
 		instance_->render_process->InitPipeLine(toy2d::Read_spv_File(vespath),
-			toy2d::Read_spv_File(frapath), h, w);
+			toy2d::Read_spv_File(frapath), w, h);
 		instance_->get_swapchain()->creatFramebuffers(w, h);
 	}
 

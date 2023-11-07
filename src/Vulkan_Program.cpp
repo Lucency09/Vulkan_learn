@@ -26,7 +26,7 @@ void Vulkan_program::Init()
 
     toy2d::Context::GetInstance().InitSwapchain(1024, 720);
 
-    toy2d::Context::GetInstance().InitRender_process("res/Spir-v/Vertex01.spv", "res/Spir-v/Fragment01.spv", 1024, 720);
+    toy2d::Context::GetInstance().InitRender_process("res/Spir-v/Vertex01.spv", "res/Spir-v/Fragment01.spv", HEIGHT, WIDTH);
 
     toy2d::Context::GetInstance().InitRenderer();
 }
