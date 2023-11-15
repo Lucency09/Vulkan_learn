@@ -58,9 +58,14 @@ void toy2d::Renderer::Render()
 	auto& renderProcess = Context::GetInstance().get_render_process();
 	auto& swapchain = Context::GetInstance().get_swapchain();
 
+    // 创建一个信号量对象
+    vk::SemaphoreCreateInfo semaphoreInfo;
+    vk::Semaphore imageAvailableSemaphore = device.createSemaphore(semaphoreInfo);
+
 	//查询下一个可以被绘制的image
 	auto result = device.acquireNextImageKHR(Context::GetInstance().get_swapchain()->get_swapchain()
-												, std::numeric_limits<uint64_t>::max());//设置为无限等待
+												, std::numeric_limits<uint64_t>::max()
+                                                , imageAvailableSemaphore, VK_NULL_HANDLE);//设置为无限等待
 	if (result.result != vk::Result::eSuccess)
 	{
 		std::cout << "acquire next image failed!" << std::endl;
@@ -73,7 +78,6 @@ void toy2d::Renderer::Render()
 	vk::CommandBufferBeginInfo begin;
 	begin.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);//设置生命周期为使用一次就重置
 	this->cmdBuf_.begin(begin);
-    cmdBuf_.begin(begin); 
     {
         vk::RenderPassBeginInfo renderPassBegin;
         vk::Rect2D area;
@@ -88,14 +92,14 @@ void toy2d::Renderer::Render()
             .setFramebuffer(swapchain->get_framebuffers()[imageIndex])//设置在哪个framebuffer上绘制，从swapchain中获取 
             .setClearValues(clearValue);//设置用什么颜色来清除framebuffer(因为在render_process中setLoadOp(vk::AttachmentLoadOp::eClear))
 
-        cmdBuf_.beginRenderPass(renderPassBegin, {}); 
+        this->cmdBuf_.beginRenderPass(renderPassBegin, {});
         {
-            cmdBuf_.bindPipeline(vk::PipelineBindPoint::eGraphics, renderProcess.get_pipeline());//绑定管线
-            cmdBuf_.draw(3, 1, 0, 0); //绘制3个顶点、1个图元，第0个顶点开始绘制，第0个Instance开始
+            this->cmdBuf_.bindPipeline(vk::PipelineBindPoint::eGraphics, renderProcess.get_pipeline());//绑定管线
+            this->cmdBuf_.draw(3, 1, 0, 0); //绘制3个顶点、1个图元，第0个顶点开始绘制，第0个Instance开始
         } 
-        cmdBuf_.endRenderPass();
+        this->cmdBuf_.endRenderPass();
     } 
-    cmdBuf_.end();
+    this->cmdBuf_.end();
 
     //填充graphcisQueue，GPU开始绘制图像
     vk::SubmitInfo submit;
