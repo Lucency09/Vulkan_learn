@@ -103,9 +103,11 @@ void toy2d::Renderer::Render()
 
     //填充graphcisQueue，GPU开始绘制图像
     vk::SubmitInfo submit;
-    submit.setCommandBuffers(cmdBuf_) 
+    submit.setWaitSemaphoreCount(1)
+        .setCommandBuffers(cmdBuf_)
         .setWaitSemaphores(imageAvaliable_)
-        .setSignalSemaphores(imageDrawFinish_);
+        .setSignalSemaphores(imageDrawFinish_)
+        .setWaitDstStageMask(nullptr);//同步机制待处理
     //在向graphcisQueue提交命令的同时指定一个fence对象，在提交完成后该fence对象会变成信号态
     Context::GetInstance().get_graphcisQueue().submit(submit, cmdAvaliableFence_);
 
