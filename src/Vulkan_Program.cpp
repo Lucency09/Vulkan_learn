@@ -67,7 +67,7 @@ void Vulkan_program::mainLoop()
     while (!glfwWindowShouldClose(this->window))
     {
         glfwPollEvents();
-        render.Render();
+        render.DrawTriangle();
     }
 }
 

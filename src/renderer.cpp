@@ -16,9 +16,23 @@ toy2d::Renderer::~Renderer()
 
 	device.freeCommandBuffers(this->cmdPool_,this->cmdBuf_);
 	device.destroyCommandPool(this->cmdPool_);
-    device.destroySemaphore(this->imageAvaliable_);
-    device.destroySemaphore(this->imageDrawFinish_);
-    device.destroyFence(this->cmdAvaliableFence_);
+
+    for (vk::Semaphore& sem : imageAvaliable_)
+    {
+        device.destroySemaphore(sem);
+    }
+    for (vk::Semaphore& sem : imageDrawFinish_)
+    {
+        device.destroySemaphore(sem);
+    }
+    for (vk::Fence& fence : cmdAvaliableFence_)
+    {
+        device.destroyFence(fence);
+    }
+
+    //device.destroySemaphore(this->imageAvaliable_);
+    //device.destroySemaphore(this->imageDrawFinish_);
+    //device.destroyFence(this->cmdAvaliableFence_);
 }
 
 void toy2d::Renderer::initCmdPool()
@@ -32,31 +46,48 @@ void toy2d::Renderer::allocCmdBuf()
 {
 	vk::CommandBufferAllocateInfo allocInfo;
 	allocInfo.setCommandPool(this->cmdPool_)//设置从this->cmdPool_中分配
-		.setCommandBufferCount(1)//分配1个Buffer
+		.setCommandBufferCount(maxFlightCount_)//分配maxFlightCount_个Buffer
 		.setLevel(vk::CommandBufferLevel::ePrimary);//设置为GPU直接执行
 
-	this->cmdBuf_ = Context::GetInstance().get_device().allocateCommandBuffers(allocInfo)[0];
+	this->cmdBuf_ = Context::GetInstance().get_device().allocateCommandBuffers(allocInfo);
 }
 
 void toy2d::Renderer::createSems()
 {
     vk::SemaphoreCreateInfo createInfo;
 
-    imageAvaliable_ = Context::GetInstance().get_device().createSemaphore(createInfo);
-    imageDrawFinish_ = Context::GetInstance().get_device().createSemaphore(createInfo);
+    this->imageAvaliable_.resize(this->maxFlightCount_);
+    this->imageDrawFinish_.resize(this->maxFlightCount_);
+
+    for(vk::Semaphore& sem : this->imageAvaliable_)
+        sem = Context::GetInstance().get_device().createSemaphore(createInfo);
+    for (vk::Semaphore& sem : this->imageDrawFinish_)
+        sem = Context::GetInstance().get_device().createSemaphore(createInfo);
+
 }
 
 void toy2d::Renderer::createFence()
 {
+    this->cmdAvaliableFence_.resize(maxFlightCount_, nullptr);
     vk::FenceCreateInfo createInfo;
-    cmdAvaliableFence_ = Context::GetInstance().get_device().createFence(createInfo);
+
+    for (auto& fence : this->cmdAvaliableFence_) {
+        vk::FenceCreateInfo fenceCreateInfo;
+        fenceCreateInfo.setFlags(vk::FenceCreateFlagBits::eSignaled);
+        fence = Context::GetInstance().get_device().createFence(fenceCreateInfo);
+    }
 }
 
-void toy2d::Renderer::Render()
+void toy2d::Renderer::DrawTriangle()
 {
 	auto& device = Context::GetInstance().get_device();
 	auto& renderProcess = Context::GetInstance().get_render_process();
 	auto& swapchain = Context::GetInstance().get_swapchain();
+
+    if (device.waitForFences(cmdAvaliableFence_[curFrame_], true, std::numeric_limits<std::uint64_t>::max()) != vk::Result::eSuccess) {
+        throw std::runtime_error("wait for fence failed");
+    }
+    device.resetFences(cmdAvaliableFence_[curFrame_]);
 
     // 创建一个信号量对象
     vk::SemaphoreCreateInfo semaphoreInfo;

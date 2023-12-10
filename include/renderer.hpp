@@ -10,14 +10,17 @@ namespace toy2d
 		Renderer();
 		~Renderer();
 
-		void Render();
+		void DrawTriangle();
 
 	private:
+		int maxFlightCount_ = 2;
+		int curFrame_ = 0;
+
 		vk::CommandPool cmdPool_;
-		vk::CommandBuffer cmdBuf_;
-		vk::Semaphore imageAvaliable_;
-		vk::Semaphore imageDrawFinish_;
-		vk::Fence cmdAvaliableFence_;//用于设置CPU和GPU之间的同步
+		std::vector<vk::CommandBuffer> cmdBuf_;
+		std::vector<vk::Semaphore> imageAvaliable_;
+		std::vector<vk::Semaphore> imageDrawFinish_;
+		std::vector<vk::Fence> cmdAvaliableFence_;//用于设置CPU和GPU之间的同步
 
 		void initCmdPool();
 		void allocCmdBuf();
