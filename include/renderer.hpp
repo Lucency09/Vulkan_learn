@@ -26,5 +26,6 @@ namespace toy2d
 		void allocCmdBuf();
 		void createSems();
 		void createFence();//创建Fence对象,其初始状态为非信号态
+		void createSemaphores();//创建Semaphore对象
 	};
 }

@@ -8,6 +8,7 @@ toy2d::Renderer::Renderer()
 	this->allocCmdBuf();
     this->createSems();
     this->createFence();
+    this->createSemaphores();
 }
 
 toy2d::Renderer::~Renderer()
@@ -78,6 +79,24 @@ void toy2d::Renderer::createFence()
     }
 }
 
+void toy2d::Renderer::createSemaphores()
+{
+    // 创建一个信号量对象
+    auto& device = Context::GetInstance().get_device();
+    vk::SemaphoreCreateInfo info;
+
+    this->imageAvaliable_.resize(this->maxFlightCount_);
+    this->imageDrawFinish_.resize(this->maxFlightCount_);
+
+    for (auto& sem : this->imageAvaliable_) {
+        sem = device.createSemaphore(info);
+    }
+
+    for (auto& sem : this->imageAvaliable_) {
+        sem = device.createSemaphore(info);
+    }
+}
+
 void toy2d::Renderer::DrawTriangle()
 {
 	auto& device = Context::GetInstance().get_device();
@@ -89,14 +108,12 @@ void toy2d::Renderer::DrawTriangle()
     }
     device.resetFences(cmdAvaliableFence_[curFrame_]);
 
-    // 创建一个信号量对象
-    vk::SemaphoreCreateInfo semaphoreInfo;
-    vk::Semaphore imageAvailableSemaphore = device.createSemaphore(semaphoreInfo);
+    
 
 	//查询下一个可以被绘制的image
 	auto result = device.acquireNextImageKHR(Context::GetInstance().get_swapchain()->get_swapchain()
 												, std::numeric_limits<uint64_t>::max()
-                                                , imageAvailableSemaphore, VK_NULL_HANDLE);//设置为无限等待
+                                                , this->imageAvaliable_[curFrame_], VK_NULL_HANDLE);//设置为无限等待
 	if (result.result != vk::Result::eSuccess)
 	{
 		std::cout << "acquire next image failed!" << std::endl;
@@ -105,10 +122,10 @@ void toy2d::Renderer::DrawTriangle()
 	auto imageIndex = result.value;
 
 	//开始向commandbuffer中填充命令
-	this->cmdBuf_.reset();//重置Buffer
-	vk::CommandBufferBeginInfo begin;
-	begin.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);//设置生命周期为使用一次就重置
-	this->cmdBuf_.begin(begin);
+	this->cmdBuf_[curFrame_].reset();//重置Buffer
+	vk::CommandBufferBeginInfo begininfo;
+	begininfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);//设置生命周期为使用一次就重置
+	this->cmdBuf_[curFrame_].begin(begininfo);
     {
         vk::RenderPassBeginInfo renderPassBegin;
         vk::Rect2D area;
@@ -123,38 +140,39 @@ void toy2d::Renderer::DrawTriangle()
             .setFramebuffer(swapchain->get_framebuffers()[imageIndex])//设置在哪个framebuffer上绘制，从swapchain中获取 
             .setClearValues(clearValue);//设置用什么颜色来清除framebuffer(因为在render_process中setLoadOp(vk::AttachmentLoadOp::eClear))
 
-        this->cmdBuf_.beginRenderPass(renderPassBegin, {});
+        this->cmdBuf_[curFrame_].beginRenderPass(renderPassBegin, {});
         {
-            this->cmdBuf_.bindPipeline(vk::PipelineBindPoint::eGraphics, renderProcess.get_pipeline());//绑定管线
-            this->cmdBuf_.draw(3, 1, 0, 0); //绘制3个顶点、1个图元，第0个顶点开始绘制，第0个Instance开始
+            this->cmdBuf_[curFrame_].bindPipeline(vk::PipelineBindPoint::eGraphics, renderProcess.get_pipeline());//绑定管线
+            this->cmdBuf_[curFrame_].draw(3, 1, 0, 0); //绘制3个顶点、1个图元，第0个顶点开始绘制，第0个Instance开始
         } 
-        this->cmdBuf_.endRenderPass();
+        this->cmdBuf_[curFrame_].endRenderPass();
     } 
-    this->cmdBuf_.end();
+    this->cmdBuf_[curFrame_].end();
 
     //填充graphcisQueue，GPU开始绘制图像
     vk::SubmitInfo submit;
-    submit.setWaitSemaphoreCount(1)
-        .setCommandBuffers(cmdBuf_)
-        .setWaitSemaphores(imageAvaliable_)
-        .setSignalSemaphores(imageDrawFinish_)
-        .setWaitDstStageMask(nullptr);//同步机制待处理
+    vk::PipelineStageFlags flags = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+    submit.setCommandBuffers(cmdBuf_[curFrame_])
+        .setWaitSemaphores(imageAvaliable_[curFrame_])
+        .setSignalSemaphores(imageDrawFinish_[curFrame_])
+        .setWaitDstStageMask(flags);//同步机制待处理
     //在向graphcisQueue提交命令的同时指定一个fence对象，在提交完成后该fence对象会变成信号态
-    Context::GetInstance().get_graphcisQueue().submit(submit, cmdAvaliableFence_);
+    Context::GetInstance().get_graphcisQueue().submit(submit, cmdAvaliableFence_[curFrame_]);
 
     //填充presentQueue，将绘制好的图像显示在屏幕上
     vk::PresentInfoKHR present;
     present.setImageIndices(imageIndex)//显示当前绘制好的图像(imageIndex)
         .setSwapchains(swapchain->get_swapchain())
-        .setWaitSemaphores(imageDrawFinish_);//
+        .setWaitSemaphores(imageDrawFinish_[curFrame_]);//
     if (Context::GetInstance().get_presentQueue().presentKHR(present) != vk::Result::eSuccess) {
         std::cout << "image present failed" << std::endl;
     }
 
-    if (Context::GetInstance().get_device().waitForFences(cmdAvaliableFence_, true, std::numeric_limits<uint64_t>::max()) !=
+    if (Context::GetInstance().get_device().waitForFences(cmdAvaliableFence_[curFrame_], true, std::numeric_limits<uint64_t>::max()) !=
         vk::Result::eSuccess) {//等待fence对象(cmdAvaliableFence_)变成信号态(true),并设置超时时长为max
         std::cout << "wait for fence failed" << std::endl;
     }
 
-    Context::GetInstance().get_device().resetFences(cmdAvaliableFence_);
+    //Context::GetInstance().get_device().resetFences(cmdAvaliableFence_[curFrame_]);
+    curFrame_ = (curFrame_ + 1) % maxFlightCount_;
 }
