@@ -45,6 +45,12 @@
     <ClCompile Include="src\renderer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\buffer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\command_manager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Vulkan_Program.h">
@@ -66,6 +72,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\renderer.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vertex.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\buffer.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\command_manager.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

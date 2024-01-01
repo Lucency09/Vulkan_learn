@@ -10,6 +10,10 @@ namespace toy2d
 	
 		//1. 顶点输入
 		vk::PipelineVertexInputStateCreateInfo inputState;
+		auto attribute = Vertex::GetAttribute();
+		auto binding = Vertex::GetBinding();
+		//inputState.setVertexBindingDescriptions(binding)//解释顶点数据的存储格式
+		//	.setVertexAttributeDescriptions(attribute);
 		createinfo.setPVertexInputState(&inputState);
 
 		//2. 图元装配？	Vertex Assembly

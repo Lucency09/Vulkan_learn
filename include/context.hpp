@@ -8,6 +8,7 @@
 #include "swapchain.hpp"
 #include "render_process.hpp"
 #include "renderer.hpp"
+#include "command_manager.hpp"
 
 namespace toy2d
 {
@@ -32,8 +33,8 @@ namespace toy2d
 
 		void InitRender_process(const std::string& vespath, const std::string& frapath, int h, int w);//创建渲染流程
 		void InitRenderer();
-
 		static Context& GetInstance();//返回自身实例
+
 		vk::Instance get_instance();//返回Vulkan句柄
 		vk::SurfaceKHR& get_surface();
 		vk::PhysicalDevice& get_phyDevice();
@@ -44,6 +45,8 @@ namespace toy2d
 		std::unique_ptr<Swapchain>& get_swapchain();
 		RenderProcess& get_render_process();
 		Renderer& get_renderer();
+		void initCommandPool();
+		std::unique_ptr<CommandManager>& get_commandManager();
 		
 		
 	private:
@@ -60,6 +63,7 @@ namespace toy2d
 		QueueFamliyIndices queueFamilyIndices;//存储命令队列
 		std::unique_ptr <RenderProcess> render_process;//存储渲染流程
 		std::unique_ptr<Renderer> renderer;
+		std::unique_ptr<CommandManager> commandManager;//用于从命令池中分配缓冲区
 
 		void createInstance(std::vector<const char*>& glfwExtensions);//创建Vulkan句柄
 		void pickupPhyiscalDevice();//选择物理设备

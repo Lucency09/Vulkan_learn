@@ -63,10 +63,12 @@ namespace toy2d
 		queryQueueFamilyIndices();
 		creatDevice();
 		getQueues();
+
 	}
 
 	Context::~Context()
 	{
+		commandManager.reset();
 		instance.destroySurfaceKHR(surface);
 		device.destroy();
 		instance.destroy();
@@ -187,6 +189,16 @@ namespace toy2d
 	Renderer& Context::get_renderer()
 	{
 		return *renderer;
+	}
+
+	void Context::initCommandPool()
+	{
+		this->commandManager = std::make_unique<CommandManager>();
+	}
+
+	std::unique_ptr<CommandManager>& Context::get_commandManager()
+	{
+		return this->commandManager;
 	}
 
 	void Context::InitSwapchain(int w, int h)
