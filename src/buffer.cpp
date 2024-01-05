@@ -3,11 +3,12 @@
 
 namespace toy2d {
 	Buffer::Buffer(size_t size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags property)
-	{
+	{//宽度，使用方式，内存所有者
 		createBuffer(size, usage);
 		auto info = queryMemoryInfo(property);
 		allocateMemory(info);
 		bindingMem2Buf();
+		this->size = size;
 	}
 
 	Buffer::~Buffer()

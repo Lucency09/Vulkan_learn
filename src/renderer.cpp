@@ -21,15 +21,19 @@ namespace toy2d
         this->createSems();
 
         this->createFence();
-        this->createSemaphores();
+        //this->createSemaphores();
+        this->createVertexBuffer();
+        this->bufferVertexData();
     }
 
     Renderer::~Renderer()
     {
-        auto& device = Context::GetInstance().get_device();
+        this->hostVertexBuffer_.reset();
+        this->deviceVertexBuffer_.reset();
 
-        device.freeCommandBuffers(this->cmdPool_, this->cmdBuf_);
-        device.destroyCommandPool(this->cmdPool_);
+        auto& device = Context::GetInstance().get_device();
+        //device.freeCommandBuffers(this->cmdPool_, this->cmdBuf_);
+        //device.destroyCommandPool(this->cmdPool_);
 
         for (vk::Semaphore& sem : imageAvaliable_)
         {
@@ -43,10 +47,6 @@ namespace toy2d
         {
             device.destroyFence(fence);
         }
-
-        //device.destroySemaphore(this->imageAvaliable_);
-        //device.destroySemaphore(this->imageDrawFinish_);
-        //device.destroyFence(this->cmdAvaliableFence_);
     }
 
     void Renderer::initCmdPool()
@@ -118,13 +118,22 @@ namespace toy2d
     {
         this->cmdBuf_.resize(maxFlightCount_);
         Context::GetInstance().initCommandPool();
-        for (auto& cmd : cmdBuf_) {
+        for (auto& cmd : cmdBuf_) 
+        {
             cmd = Context::GetInstance().get_commandManager()->CreateOneCommandBuffer();
         }
     }
 
     void Renderer::createVertexBuffer()
     {
+        hostVertexBuffer_.reset(new Buffer(sizeof(vertices),//设置为三角形顶点大小
+            vk::BufferUsageFlagBits::eTransferSrc,//只用作传输
+            vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));//设置为CPU可见 | CPU本地独占
+        
+        deviceVertexBuffer_.reset(new Buffer(sizeof(vertices),//设置为三角形顶点大小
+            vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst,//用作传输和顶点Buffer
+            vk::MemoryPropertyFlagBits::eDeviceLocal));//仅GPU可见
+        
     }
 
     void Renderer::createUniformBuffers()
@@ -133,6 +142,35 @@ namespace toy2d
 
     void Renderer::bufferVertexData()
     {
+        //为当前设备设置一次内存映射，其参数为本地顶点缓冲的内存，第0片区域，大小为本地顶点缓冲的大小
+        void* ptr = Context::GetInstance().get_device().mapMemory(this->hostVertexBuffer_->memory, 0, this->hostVertexBuffer_->size);
+        //将数据vertices拷贝到内存中
+        memcpy(ptr, vertices.data(), sizeof(vertices));
+        //关闭内存映射
+        Context::GetInstance().get_device().unmapMemory(this->hostVertexBuffer_->memory);
+
+        //创建一个临时的cmdBuffer
+        vk::CommandBuffer cmdBuf = Context::GetInstance().get_commandManager()->CreateOneCommandBuffer();
+
+        //将命令添加至命令队列，内容为将hostBuffer内的数据传输到deviceBuffer中
+        vk::CommandBufferBeginInfo begin;
+        begin.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+        cmdBuf.begin(begin); {
+            vk::BufferCopy region;
+            region.setSize(this->hostVertexBuffer_->size)
+                .setSrcOffset(0)//源偏移量
+                .setDstOffset(0);//目标偏移量
+            cmdBuf.copyBuffer(this->hostVertexBuffer_->buffer, this->deviceVertexBuffer_->buffer, region);
+        } cmdBuf.end();
+
+        vk::SubmitInfo submit;
+        submit.setCommandBuffers(cmdBuf);
+        Context::GetInstance().get_graphcisQueue().submit(submit);//提交
+
+        Context::GetInstance().get_device().waitIdle();//让GPU等待操作完成
+
+        Context::GetInstance().get_commandManager()->FreeCmd(cmdBuf);
+        
     }
 
     void Renderer::bufferUniformData()
@@ -202,6 +240,8 @@ namespace toy2d
             this->cmdBuf_[curFrame_].beginRenderPass(renderPassBegin, {});
             {
                 this->cmdBuf_[curFrame_].bindPipeline(vk::PipelineBindPoint::eGraphics, renderProcess.get_pipeline());//绑定管线
+                vk::DeviceSize offset = 0;
+                this->cmdBuf_[curFrame_].bindVertexBuffers(0, deviceVertexBuffer_->buffer, offset);//将deviceVertexBuffer_的数据传入，第一个参数指代存在多个buffer时使用第几个
                 this->cmdBuf_[curFrame_].draw(3, 1, 0, 0); //绘制3个顶点、1个图元，第0个顶点开始绘制，第0个Instance开始
             }
             this->cmdBuf_[curFrame_].endRenderPass();
