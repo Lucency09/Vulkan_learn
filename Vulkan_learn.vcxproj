@@ -155,6 +155,7 @@
     <ClInclude Include="include\shader.hpp" />
     <ClInclude Include="include\swapchain.hpp" />
     <ClInclude Include="include\tool.hpp" />
+    <ClInclude Include="include\uniform.hpp" />
     <ClInclude Include="include\vertex.hpp" />
     <ClInclude Include="include\Vulkan_Program.h" />
   </ItemGroup>

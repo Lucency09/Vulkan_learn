@@ -23,11 +23,11 @@ void toy2d::vkShader::Init(const std::string& vertexSource, const std::string& f
     //创建顶点着色器
     createInfo.codeSize = vertexSource.size();
     createInfo.pCode = (uint32_t*)vertexSource.data();
-    vertexModule = Context::GetInstance().get_device().createShaderModule(createInfo);
+    this->vertexModule = Context::GetInstance().get_device().createShaderModule(createInfo);
     //创建片段着色器
     createInfo.codeSize = fragSource.size();
     createInfo.pCode = (uint32_t*)fragSource.data();
-    fragmentModule = Context::GetInstance().get_device().createShaderModule(createInfo);
+    this->fragmentModule = Context::GetInstance().get_device().createShaderModule(createInfo);
 
     this->initStage();
 }

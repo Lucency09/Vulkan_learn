@@ -10,18 +10,26 @@ namespace toy2d
 	public:
 		void InitPipeLine(const std::string& vertexSource, const std::string& fragSource, int width, int height);
 		void InitLayout();
-		void InitRenderPass();
+
+		vk::PipelineLayout& get_layout();
 		vk::RenderPass& get_renderPass();
 		vk::Pipeline& get_pipeline();
-
+		vk::DescriptorSetLayout& get_setLayout();
+		
 
 		~RenderProcess();
+		RenderProcess();
 
 	private:
-		vk::Pipeline pipeline;
-		vk::PipelineLayout layout;//涉及uniform数据
-		vk::RenderPass renderPass;//渲染流程
+		vk::Pipeline graphicsPipeline = nullptr;
+		vk::PipelineLayout layout = nullptr;//涉及uniform数据
+		vk::RenderPass renderPass = nullptr;//渲染流程
+		vk::DescriptorSetLayout setLayout = nullptr;
+
 		vkShader shader;
-		
+		vk::PipelineLayout createLayout();//用于指定uniform布局
+		vk::DescriptorSetLayout createSetLayout();
+		vk::Pipeline createGraphicsPipeline(const std::vector<char>& vertexSource, const std::vector<char>& fragSource);
+		void InitRenderPass();
 	};
 }

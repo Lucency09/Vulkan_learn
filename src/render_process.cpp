@@ -66,21 +66,15 @@ namespace toy2d
 		createinfo.setPColorBlendState(&blend);
 
 		//9. renderpass and layout
-		createinfo.setRenderPass(this->renderPass);
-		createinfo.setLayout(this->layout);
+		createinfo.setRenderPass(this->renderPass)
+					.setLayout(this->layout);
 
 		//实际创建渲染管线
 		vk::ResultValue<vk::Pipeline> result = Context::GetInstance().get_device().createGraphicsPipeline(nullptr, createinfo);
 		if (result.result != vk::Result::eSuccess) {
 			throw std::runtime_error("create graphics pipeline failed");
 		}
-		this->pipeline = result.value;
-	}
-
-	void RenderProcess::InitLayout()
-	{
-		vk::PipelineLayoutCreateInfo createinfo;
-		this->layout = Context::GetInstance().get_device().createPipelineLayout(createinfo);
+		this->graphicsPipeline = result.value;
 	}
 
 	void RenderProcess::InitRenderPass()
@@ -116,26 +110,60 @@ namespace toy2d
 
 		this->renderPass = Context::GetInstance().get_device().createRenderPass(createInfo);//最终创建渲染流程
 
-		
+	}
+
+	vk::PipelineLayout& RenderProcess::get_layout()
+	{
+		return this->layout;
 	}
 
 	vk::RenderPass& RenderProcess::get_renderPass()
 	{
-		return renderPass;
+		return this->renderPass;
 	}
 
 	vk::Pipeline& RenderProcess::get_pipeline()
 	{
-		return this->pipeline;
+		return this->graphicsPipeline;
+	}
+
+	vk::DescriptorSetLayout& RenderProcess::get_setLayout()
+	{
+		return this->setLayout;
 	}
 
 	RenderProcess::~RenderProcess()
 	{
 		auto& device = Context::GetInstance().get_device();
 		
-		
+		device.destroyDescriptorSetLayout(this->setLayout);
 		device.destroyRenderPass(this->renderPass);
 		device.destroyPipelineLayout(this->layout);
-		device.destroyPipeline(this->pipeline);
+		device.destroyPipeline(this->graphicsPipeline);
 	}
+
+	RenderProcess::RenderProcess()
+	{
+		this->setLayout = createSetLayout();
+		this->layout = createLayout();
+		this->InitRenderPass();
+	}
+
+	vk::PipelineLayout RenderProcess::createLayout()
+	{
+		vk::PipelineLayoutCreateInfo createInfo;
+		createInfo.setSetLayouts(this->setLayout);
+
+		return Context::GetInstance().get_device().createPipelineLayout(createInfo);
+	}
+
+	vk::DescriptorSetLayout RenderProcess::createSetLayout()
+	{
+		vk::DescriptorSetLayoutCreateInfo createInfo;
+		auto binding = Uniform::GetBinding();
+		createInfo.setBindings(binding);
+
+		return Context::GetInstance().get_device().createDescriptorSetLayout(createInfo);
+	}
+
 }

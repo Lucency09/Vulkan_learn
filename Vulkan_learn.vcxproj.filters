@@ -83,6 +83,9 @@
     <ClInclude Include="include\command_manager.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\uniform.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\Shader\Vertex01.shader" />

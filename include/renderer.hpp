@@ -4,6 +4,7 @@
 
 #include "vertex.hpp"
 #include "buffer.hpp"
+#include "uniform.hpp"
 
 namespace toy2d
 {
@@ -36,14 +37,14 @@ namespace toy2d
 
 		void initCmdPool();//已弃用，功能转移到createCmdBuffers()
 		void allocCmdBuf();//已弃用，功能转移到createCmdBuffers()
-		void createSems();
+
 		void createFence();//创建Fence对象,其初始状态为非信号态
 		void createSemaphores();//创建Semaphore对象
 		void createCmdBuffers();
 		void createVertexBuffer();
-		void createUniformBuffers();
+		void createUniformBuffers(); //创建Uniform数据传输缓冲
 		void bufferVertexData();//将顶点数据从CPU传输到GPU
-		void bufferUniformData();
+		void bufferUniformData();//向Uniform缓冲中传入数据
 		void createDescriptorPool();
 		void allocateSets();
 		void updateSets();
