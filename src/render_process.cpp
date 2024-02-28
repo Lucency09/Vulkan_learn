@@ -7,11 +7,20 @@ namespace toy2d
 	{
 		this->shader.Init(vertexSource, fragSource);//初始化shader程序
 		vk::GraphicsPipelineCreateInfo createinfo;
+
+		// 0. shader prepare
+		std::array<vk::PipelineShaderStageCreateInfo, 2> stageCreateInfos;
+		stageCreateInfos[0].setModule(shader.get_vertexModule())
+			.setPName("main")
+			.setStage(vk::ShaderStageFlagBits::eVertex);
+		stageCreateInfos[1].setModule(shader.get_fragmentModule())
+			.setPName("main")
+			.setStage(vk::ShaderStageFlagBits::eFragment);
 	
 		//1. 顶点输入
 		vk::PipelineVertexInputStateCreateInfo inputState;
-		auto attribute = Vertex::GetAttribute();
-		auto binding = Vertex::GetBinding();
+		auto attribute = Vec::GetAttributeDescription();
+		auto binding = Vec::GetBindingDescription();
 		inputState.setVertexBindingDescriptions(binding)//解释顶点数据的存储格式
 			.setVertexAttributeDescriptions(attribute);
 		createinfo.setPVertexInputState(&inputState);

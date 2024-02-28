@@ -216,7 +216,6 @@ namespace toy2d
 	{
 		render_process.reset(new RenderProcess);
 		std::cout << vespath << std::endl << frapath << std::endl;
-		//instance_->render_process->InitLayout();
 		instance_->render_process->InitPipeLine(toy2d::Read_spv_File(vespath),
 			toy2d::Read_spv_File(frapath), w, h);
 		instance_->get_swapchain()->creatFramebuffers(w, h);

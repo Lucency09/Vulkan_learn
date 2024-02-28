@@ -139,6 +139,7 @@
     <ClCompile Include="src\command_manager.cpp" />
     <ClCompile Include="src\context.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\math.cpp" />
     <ClCompile Include="src\renderer.cpp" />
     <ClCompile Include="src\render_process.cpp" />
     <ClCompile Include="src\shader.cpp" />
@@ -156,7 +157,7 @@
     <ClInclude Include="include\swapchain.hpp" />
     <ClInclude Include="include\tool.hpp" />
     <ClInclude Include="include\uniform.hpp" />
-    <ClInclude Include="include\vertex.hpp" />
+    <ClInclude Include="include\math.hpp" />
     <ClInclude Include="include\Vulkan_Program.h" />
   </ItemGroup>
   <ItemGroup>

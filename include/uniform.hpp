@@ -4,10 +4,6 @@
 
 namespace toy2d {
 
-    struct Color final {
-        float r, g, b;
-    };
-
     struct Uniform final {
         Color color; 
 

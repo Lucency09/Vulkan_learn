@@ -4,25 +4,17 @@
 
 namespace toy2d
 {
-    static std::array<Vertex, 3> vertices 
-        = {
-            Vertex{0.0, -0.5},
-            Vertex{0.5, 0.5},
-            Vertex{-0.5, 0.5}
-        };
-    //存储三角形顶点坐标
-
-    const Uniform uniform{ Color{1, 0.5, 0} };
-
     Renderer::Renderer()
     {
         this->createFence();
         this->createSemaphores();
         this->createCmdBuffers();
-        this->createVertexBuffer();
-        this->bufferVertexData();
+        this->createBuffer();
         this->createUniformBuffers();
-        this->bufferUniformData();
+
+        this->updateBuffer();
+        this->updateUniformData();
+
         this->createDescriptorPool();
         this->allocateSets();
         this->updateSets();
@@ -36,6 +28,8 @@ namespace toy2d
         this->deviceUniformBuffer_.clear();
         this->hostVertexBuffer_.reset();
         this->deviceVertexBuffer_.reset();
+        this->hostIndicesBuffer_.reset();
+        this->deviceIndicesBuffer_.reset();
 
         for (vk::Semaphore& sem : imageAvaliable_)
         {
@@ -113,14 +107,32 @@ namespace toy2d
 
     void Renderer::createVertexBuffer()
     {
-        hostVertexBuffer_.reset(new Buffer(sizeof(vertices),//设置为三角形顶点大小
+        this->hostVertexBuffer_.reset(new Buffer(sizeof(Vec) * vertices.size(),//设置为三角形顶点大小
             vk::BufferUsageFlagBits::eTransferSrc,//只用作传输
             vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));//设置为CPU可见 | CPU本地独占
         
-        deviceVertexBuffer_.reset(new Buffer(sizeof(vertices),//设置为三角形顶点大小
+        this->deviceVertexBuffer_.reset(new Buffer(sizeof(Vec) * vertices.size(),//设置为三角形顶点大小
             vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst,//用作传输和顶点Buffer
             vk::MemoryPropertyFlagBits::eDeviceLocal));//仅GPU可见
         
+    }
+
+    void Renderer::createIndicesBuffer()
+    {
+        this->hostIndicesBuffer_.reset(new Buffer(sizeof(std::uint32_t) * this->indices.size(),
+            vk::BufferUsageFlagBits::eTransferSrc, 
+            vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
+
+        this->deviceIndicesBuffer_.reset(new Buffer(sizeof(std::uint32_t) * this->indices.size(),
+            vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst,
+            vk::MemoryPropertyFlagBits::eDeviceLocal));
+    }
+
+
+    void Renderer::createBuffer()
+    {
+        this->createVertexBuffer();
+        this->createIndicesBuffer();
     }
 
     void Renderer::createUniformBuffers()
@@ -143,40 +155,36 @@ namespace toy2d
         } 
     }
 
-    void Renderer::bufferVertexData()
+    void Renderer::updateVertexData()
     {
-        //为当前设备设置一次内存映射，其参数为本地顶点缓冲的内存，第0片区域，大小为本地顶点缓冲的大小
+        //为当前设备设置一次内存映射，其参数为本地顶点缓冲的内存，起始偏移量，大小为本地顶点缓冲的大小
         void* ptr = Context::GetInstance().get_device().mapMemory(this->hostVertexBuffer_->memory, 0, this->hostVertexBuffer_->size);
-        //将数据vertices拷贝到内存中
-        memcpy(ptr, vertices.data(), sizeof(vertices));
+        //将数据vertices拷贝到内存中(这部分内存已经和hostVertexBuffer_有映射关系了，故该操作就是把vertices中的输入拷入this->hostVertexBuffer_-)
+        memcpy(ptr, this->vertices.data(), this->hostVertexBuffer_->size);
         //关闭内存映射
         Context::GetInstance().get_device().unmapMemory(this->hostVertexBuffer_->memory);
 
-        //创建一个临时的cmdBuffer
-        vk::CommandBuffer cmdBuf = Context::GetInstance().get_commandManager()->CreateOneCommandBuffer();
+        this->copyBuffer(this->hostVertexBuffer_->buffer, this->deviceVertexBuffer_->buffer, this->hostVertexBuffer_->size, 0, 0);
 
-        //将命令添加至命令队列，内容为将hostBuffer内的数据传输到deviceBuffer中
-        vk::CommandBufferBeginInfo begin;
-        begin.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-        cmdBuf.begin(begin); {
-            vk::BufferCopy region;
-            region.setSize(this->hostVertexBuffer_->size)
-                .setSrcOffset(0)//源偏移量
-                .setDstOffset(0);//目标偏移量
-            cmdBuf.copyBuffer(this->hostVertexBuffer_->buffer, this->deviceVertexBuffer_->buffer, region);
-        } cmdBuf.end();
-
-        vk::SubmitInfo submit;
-        submit.setCommandBuffers(cmdBuf);
-        Context::GetInstance().get_graphcisQueue().submit(submit);//提交
-
-        Context::GetInstance().get_device().waitIdle();//让GPU等待操作完成
-
-        Context::GetInstance().get_commandManager()->FreeCmd(cmdBuf);
-        
     }
 
-    void Renderer::bufferUniformData()
+    void Renderer::updateIndicesData()
+    {
+        void* ptr = Context::GetInstance().get_device().mapMemory(this->hostIndicesBuffer_->memory, 0, this->hostIndicesBuffer_->size);
+        
+        memcpy(ptr, this->indices.data(), this->hostIndicesBuffer_->size);
+        Context::GetInstance().get_device().unmapMemory(this->hostIndicesBuffer_->memory);
+
+        this->copyBuffer(this->hostIndicesBuffer_->buffer, this->deviceIndicesBuffer_->buffer, this->hostIndicesBuffer_->size, 0, 0);
+    }
+
+    void Renderer::updateBuffer()
+    {
+        this->updateVertexData();
+        this->updateIndicesData();
+    }
+
+    void Renderer::updateUniformData()
     {
         for (int i = 0; i < hostUniformBuffer_.size(); i++) {
             auto& buffer = hostUniformBuffer_[i];
@@ -198,6 +206,8 @@ namespace toy2d
         createInfo.setMaxSets(this->maxFlightCount_)
             .setPoolSizes(poolSize);
         this->descriptorPool_ = Context::GetInstance().get_device().createDescriptorPool(createInfo);
+
+        // TODO 待添加第二个DescriptorPool
     }
 
     void Renderer::allocateSets()
@@ -234,15 +244,16 @@ namespace toy2d
 
     void Renderer::copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset)
     {
+        //创建一个临时的cmdBuffer
         auto cmdBuf = Context::GetInstance().get_commandManager()->CreateOneCommandBuffer();
-
+        //将命令添加至命令队列，内容为将hostBuffer内的数据传输到deviceBuffer中
         vk::CommandBufferBeginInfo begin;
         begin.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
         cmdBuf.begin(begin); {
             vk::BufferCopy region;
             region.setSize(size)
-                .setSrcOffset(srcOffset)
-                .setDstOffset(dstOffset);
+                .setSrcOffset(srcOffset)//源偏移量
+                .setDstOffset(dstOffset);//目标偏移量
             cmdBuf.copyBuffer(src, dst, region);
         } cmdBuf.end();
 
@@ -255,7 +266,7 @@ namespace toy2d
         Context::GetInstance().get_commandManager()->FreeCmd(cmdBuf);
     }
 
-    void Renderer::DrawTriangle()
+    void Renderer::Draw()
     {
         vk::Device& device = Context::GetInstance().get_device();
         toy2d::RenderProcess& renderProcess = Context::GetInstance().get_render_process();
@@ -265,8 +276,6 @@ namespace toy2d
             throw std::runtime_error("wait for fence failed");
         }
         device.resetFences(cmdAvaliableFence_[curFrame_]);
-
-
 
         //查询下一个可以被绘制的image
         auto result = device.acquireNextImageKHR(Context::GetInstance().get_swapchain()->get_swapchain()
@@ -302,11 +311,11 @@ namespace toy2d
             {
                 this->cmdBuf_[curFrame_].bindPipeline(vk::PipelineBindPoint::eGraphics, renderProcess.get_pipeline());//绑定管线
                 vk::DeviceSize offset = 0;
-                //this->sets_[curFrame_];
-                //this->updateSets();
                 this->cmdBuf_[curFrame_].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, Context::GetInstance().get_render_process().get_layout(), 0, this->sets_[curFrame_], {});
                 this->cmdBuf_[curFrame_].bindVertexBuffers(0, deviceVertexBuffer_->buffer, offset);//将deviceVertexBuffer_的数据传入，第一个参数指代存在多个buffer时使用第几个
-                this->cmdBuf_[curFrame_].draw(3, 1, 0, 0); //绘制3个顶点、1个图元，第0个顶点开始绘制，第0个Instance开始
+                this->cmdBuf_[curFrame_].bindIndexBuffer(this->deviceIndicesBuffer_->buffer, 0, vk::IndexType::eUint32);
+                //this->cmdBuf_[curFrame_].draw(3, 1, 0, 0); //绘制3个顶点、1个图元，第0个顶点开始绘制，第0个Instance开始
+                this->cmdBuf_[curFrame_].drawIndexed(6, 1, 0, 0, 0);
             }
             this->cmdBuf_[curFrame_].endRenderPass();
         }

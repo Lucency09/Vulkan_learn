@@ -2,9 +2,10 @@
 
 #include <vulkan/vulkan.hpp>
 
-#include "vertex.hpp"
+#include "math.hpp"
 #include "buffer.hpp"
 #include "uniform.hpp"
+
 
 namespace toy2d
 {
@@ -15,11 +16,26 @@ namespace toy2d
 		Renderer();
 		~Renderer();
 
-		void DrawTriangle();
+		void Draw();
+		void set_Vertices();
+		void set_Indices();
 
 	private:
 		int maxFlightCount_ = 2;
 		int curFrame_ = 0;
+		std::vector<Vec> vertices = {
+			Vec{{-0.5, 0.5, 0}},
+			Vec{{-0.5, -0.5, 0}},
+			Vec{{0.5, 0.5, 0}},
+			Vec{{0.5, -0.5, 0}},
+		};
+		std::vector<std::uint32_t> indices {
+			0, 1, 2,
+			2, 1, 3
+		};
+
+		Uniform uniform{ Color{1, 0.5, 0} };
+		
 
 		vk::CommandPool cmdPool_;//已弃用
 		std::vector<vk::CommandBuffer> cmdBuf_;//用于存储命令缓冲
@@ -29,6 +45,9 @@ namespace toy2d
 
 		std::unique_ptr<Buffer> hostVertexBuffer_;//本地顶点坐标缓冲
 		std::unique_ptr<Buffer> deviceVertexBuffer_;
+		std::unique_ptr<Buffer> hostIndicesBuffer_;//本地顶点索引缓冲
+		std::unique_ptr<Buffer> deviceIndicesBuffer_;
+
 		std::vector<std::unique_ptr<Buffer>> hostUniformBuffer_;//CPU的buffer
 		std::vector<std::unique_ptr<Buffer>> deviceUniformBuffer_;//GPU的buffer
 
@@ -42,9 +61,14 @@ namespace toy2d
 		void createSemaphores();//创建Semaphore对象
 		void createCmdBuffers();
 		void createVertexBuffer();
+		void createIndicesBuffer();
+		
+		void createBuffer();//创建verticesBuffer和indicesBuffer
+		void updateBuffer();//更新verticesBuffer和indicesBuffer
 		void createUniformBuffers(); //创建Uniform数据传输缓冲
-		void bufferVertexData();//将顶点数据从CPU传输到GPU
-		void bufferUniformData();//向Uniform缓冲中传入数据
+		void updateVertexData();//将顶点数据从CPU传输到GPU
+		void updateIndicesData();//将索引数据从CPU传输到GPU
+		void updateUniformData();//向Uniform缓冲中传入数据
 		void createDescriptorPool();
 		void allocateSets();
 		void updateSets();

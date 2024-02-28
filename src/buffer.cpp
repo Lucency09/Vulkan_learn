@@ -40,6 +40,7 @@ namespace toy2d {
 		//查询当前缓冲区this->buffer需要占用当前逻辑设备中多宽的内存，存在内存对齐问题可能导致其之与上诉size不一致
 		MemoryInfo info;
 		auto requirements = Context::GetInstance().get_device().getBufferMemoryRequirements(this->buffer);
+		this->requireSize = requirements.size;
 		info.size = requirements.size;
 
 		auto properties = Context::GetInstance().get_phyDevice().getMemoryProperties();//当前硬件设备支持的内存类型列表

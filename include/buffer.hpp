@@ -9,7 +9,9 @@ namespace toy2d {
     public:
         vk::Buffer buffer;
         vk::DeviceMemory memory;
+        void* map;
         size_t size;
+        size_t requireSize;
 
         Buffer(size_t size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags property);
         ~Buffer();
