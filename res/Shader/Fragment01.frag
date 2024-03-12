@@ -1,14 +1,17 @@
 #version 450
 
-layout(location = 0) out vec4 outColor;
-layout(binding = 0) uniform UBO {
+layout(location = 0) in vec4 moutColor;
+
+layout(binding = 2) uniform Color {
     vec3 color;
-} ubo;
+} color;
+
+layout(location = 0) out vec4 outColor;
 
 void main() 
 {
-    //outColor = vec4(0.0, 1.0, 0.0, 1.0);
-    outColor = vec4(ubo.color, 1);
+    //outColor = vec4(color.color, 1);
+    outColor = moutColor;
 }
 
 /*

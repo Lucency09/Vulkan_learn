@@ -1,24 +1,34 @@
 #include "renderer.hpp"
 #include "context.hpp"
 
-
 namespace toy2d
 {
     Renderer::Renderer()
     {
-        this->createFence();
-        this->createSemaphores();
-        this->createCmdBuffers();
-        this->createBuffer();
-        this->createUniformBuffers();
-
-        this->updateBuffer();
-        this->updateUniformData();
-
-        this->createDescriptorPool();
-        this->allocateSets();
-        this->updateSets();
+        this->init();
     }
+
+    Renderer::Renderer(std::vector<Vertex> vex, std::vector<std::uint32_t> ind)
+        : vertices(std::move(vex)), indices(std::move(ind))
+    {   
+        this->init();
+    }
+
+    void Renderer::init()
+    {
+		this->createFence();
+		this->createSemaphores();
+		this->createCmdBuffers();
+		this->createBuffer();
+		this->createUniformBuffers();
+
+		this->updateBuffer();
+		this->updateUniformData();
+
+		this->createDescriptorPool();
+		this->allocateSets(2);
+		this->updateSets(2);
+	}
 
     Renderer::~Renderer()
     {
@@ -107,11 +117,11 @@ namespace toy2d
 
     void Renderer::createVertexBuffer()
     {
-        this->hostVertexBuffer_.reset(new Buffer(sizeof(Vec) * vertices.size(),//设置为三角形顶点大小
+        this->hostVertexBuffer_.reset(new Buffer(sizeof(Vertex) * vertices.size(),//设置为三角形顶点大小
             vk::BufferUsageFlagBits::eTransferSrc,//只用作传输
             vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));//设置为CPU可见 | CPU本地独占
         
-        this->deviceVertexBuffer_.reset(new Buffer(sizeof(Vec) * vertices.size(),//设置为三角形顶点大小
+        this->deviceVertexBuffer_.reset(new Buffer(sizeof(Vertex) * vertices.size(),//设置为三角形顶点大小
             vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst,//用作传输和顶点Buffer
             vk::MemoryPropertyFlagBits::eDeviceLocal));//仅GPU可见
         
@@ -128,7 +138,6 @@ namespace toy2d
             vk::MemoryPropertyFlagBits::eDeviceLocal));
     }
 
-
     void Renderer::createBuffer()
     {
         this->createVertexBuffer();
@@ -137,19 +146,19 @@ namespace toy2d
 
     void Renderer::createUniformBuffers()
     {
-        this->hostUniformBuffer_.resize(maxFlightCount_);
-        this->deviceUniformBuffer_.resize(maxFlightCount_);
+        this->hostUniformBuffer_.resize(this->maxFlightCount_ * this->uniformCount_);//缓冲数乘以uniform变量数
+        this->deviceUniformBuffer_.resize(this->maxFlightCount_ * this->uniformCount_);
 
         for (auto& buffer : this->hostUniformBuffer_)
         {
-            buffer.reset(new Buffer(sizeof(uniform),
+            buffer.reset(new Buffer(sizeof(UniformColor),
                 vk::BufferUsageFlagBits::eTransferSrc,
                 vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible));
         }
 
         for (auto& buffer : this->deviceUniformBuffer_)
         {
-            buffer.reset(new Buffer(sizeof(uniform),
+            buffer.reset(new Buffer(sizeof(UniformColor),
                 vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer,
                 vk::MemoryPropertyFlagBits::eDeviceLocal));
         } 
@@ -189,7 +198,7 @@ namespace toy2d
         for (int i = 0; i < hostUniformBuffer_.size(); i++) {
             auto& buffer = hostUniformBuffer_[i];
             void* ptr = Context::GetInstance().get_device().mapMemory(buffer->memory, 0, buffer->size);
-            memcpy(ptr, &uniform, sizeof(uniform));
+            memcpy(ptr, &UniformColor, sizeof(UniformColor));
             Context::GetInstance().get_device().unmapMemory(buffer->memory);
 
             copyBuffer(buffer->buffer, deviceUniformBuffer_[i]->buffer, buffer->size, 0, 0);
@@ -202,39 +211,39 @@ namespace toy2d
         vk::DescriptorPoolCreateInfo createInfo;
         vk::DescriptorPoolSize poolSize;
         poolSize.setType(vk::DescriptorType::eUniformBuffer)
-            .setDescriptorCount(this->maxFlightCount_);
-        createInfo.setMaxSets(this->maxFlightCount_)
+            .setDescriptorCount(this->uniformCount_);
+        createInfo.setMaxSets(this->maxFlightCount_ * this->uniformCount_)
             .setPoolSizes(poolSize);
         this->descriptorPool_ = Context::GetInstance().get_device().createDescriptorPool(createInfo);
-
-        // TODO 待添加第二个DescriptorPool
+        this->sets_.resize(this->uniformCount_);
     }
 
-    void Renderer::allocateSets()
+    void Renderer::allocateSets(int binding_num)
     {
         std::vector<vk::DescriptorSetLayout> layouts(this->maxFlightCount_, Context::GetInstance().get_render_process().get_setLayout());
+        //get_setLayout()返回值是一个引用，所以这里不需要使用std::move
         vk::DescriptorSetAllocateInfo allocInfo;
         allocInfo.setDescriptorPool(this->descriptorPool_)
             .setDescriptorSetCount(this->maxFlightCount_)
             .setSetLayouts(layouts);
 
-        this->sets_ = Context::GetInstance().get_device().allocateDescriptorSets(allocInfo);
+        this->sets_[binding_num] = Context::GetInstance().get_device().allocateDescriptorSets(allocInfo);
         //sets_ 是从this->descriptorPool_中创建的，this->descriptorPool_销毁时也跟着被销毁了，不需要手动回收
     }
 
-    void Renderer::updateSets()
+    void Renderer::updateSets(int binding_num)
     {
-        for (int i = 0; i < sets_.size(); i++) {
-            auto& set = sets_[i];
+        for (int i = 0; i < sets_[binding_num].size(); i++) {
+            auto& set = sets_[binding_num][i];
             vk::DescriptorBufferInfo bufferInfo;
-            bufferInfo.setBuffer(this->deviceUniformBuffer_[i]->buffer)
+            bufferInfo.setBuffer(this->deviceUniformBuffer_[i]->buffer)//此处将set和buffer绑定
                 .setOffset(0)
                 .setRange(this->deviceUniformBuffer_[i]->size);
 
             vk::WriteDescriptorSet writer;
             writer.setDescriptorType(vk::DescriptorType::eUniformBuffer)
                 .setBufferInfo(bufferInfo)
-                .setDstBinding(0)
+                .setDstBinding(binding_num)
                 .setDstSet(set)
                 .setDstArrayElement(0)
                 .setDescriptorCount(1);
@@ -311,11 +320,11 @@ namespace toy2d
             {
                 this->cmdBuf_[curFrame_].bindPipeline(vk::PipelineBindPoint::eGraphics, renderProcess.get_pipeline());//绑定管线
                 vk::DeviceSize offset = 0;
-                this->cmdBuf_[curFrame_].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, Context::GetInstance().get_render_process().get_layout(), 0, this->sets_[curFrame_], {});
+                this->cmdBuf_[curFrame_].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, Context::GetInstance().get_render_process().get_layout(), 0, this->sets_[2][curFrame_], {});
                 this->cmdBuf_[curFrame_].bindVertexBuffers(0, deviceVertexBuffer_->buffer, offset);//将deviceVertexBuffer_的数据传入，第一个参数指代存在多个buffer时使用第几个
                 this->cmdBuf_[curFrame_].bindIndexBuffer(this->deviceIndicesBuffer_->buffer, 0, vk::IndexType::eUint32);
                 //this->cmdBuf_[curFrame_].draw(3, 1, 0, 0); //绘制3个顶点、1个图元，第0个顶点开始绘制，第0个Instance开始
-                this->cmdBuf_[curFrame_].drawIndexed(6, 1, 0, 0, 0);
+                this->cmdBuf_[curFrame_].drawIndexed(6, 1, 0, 0, 0);//绘制6个顶点，1个实例，第0个顶点开始绘制，第0个Instance开始
             }
             this->cmdBuf_[curFrame_].endRenderPass();
         }
@@ -349,4 +358,13 @@ namespace toy2d
         curFrame_ = (curFrame_ + 1) % maxFlightCount_;
     }
 
+    void Renderer::set__Vertices(std::vector<Vertex> vex)
+    {
+		this->vertices = std::move(vex);
+    }
+
+    void Renderer::set_Index(std::vector<std::uint32_t> ind)
+    {
+        this->indices = std::move(ind);
+    }
 }

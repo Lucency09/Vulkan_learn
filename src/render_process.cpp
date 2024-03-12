@@ -19,8 +19,8 @@ namespace toy2d
 	
 		//1. 顶点输入
 		vk::PipelineVertexInputStateCreateInfo inputState;
-		auto attribute = Vec::GetAttributeDescription();
-		auto binding = Vec::GetBindingDescription();
+		auto attribute = Vertex::GetAttributeDescription();
+		auto binding = Vertex::GetBindingDescription();
 		inputState.setVertexBindingDescriptions(binding)//解释顶点数据的存储格式
 			.setVertexAttributeDescriptions(attribute);
 		createinfo.setPVertexInputState(&inputState);
@@ -161,7 +161,7 @@ namespace toy2d
 	vk::PipelineLayout RenderProcess::createLayout()
 	{
 		vk::PipelineLayoutCreateInfo createInfo;
-		createInfo.setSetLayouts(this->setLayout);
+		createInfo.setSetLayouts(this->setLayout);//放进去第一个描述集，故其set编号为0
 
 		return Context::GetInstance().get_device().createPipelineLayout(createInfo);
 	}
