@@ -10,6 +10,9 @@
 #include "renderer.hpp"
 #include "command_manager.hpp"
 
+#ifndef CONTEXT
+#define CONTEXT
+
 namespace toy2d
 {
 	struct QueueFamliyIndices final
@@ -90,3 +93,4 @@ namespace toy2d
 
 	};
 }
+#endif // !CONTEXT

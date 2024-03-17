@@ -1,15 +1,16 @@
 #pragma once
 
 #include <vulkan/vulkan.hpp>
+#include <map>
 
 #include "math.hpp"
 #include "buffer.hpp"
 #include "uniform.hpp"
 
+#ifndef RENDERER
+#define RENDERER
 
-namespace toy2d
-{
-	
+namespace toy2d {
 	class Renderer final
 	{
 	public:
@@ -25,7 +26,7 @@ namespace toy2d
 	private:
 		int maxFlightCount_ = 2;//双缓冲
 		int curFrame_ = 0;//当前帧
-		int uniformCount_ = 3;//uniform变量计数
+		int uniformCount_ = 2;//uniform变量计数
 
 		std::vector<Vertex> vertices = {
 			Vertex{{-0.5, 0.5, 0}, {1.0, 0.0, 0.0}},
@@ -42,6 +43,7 @@ namespace toy2d
 		};//顶点索引
 
 		glm::vec3 UniformColor{ 1, 0.5, 0 };
+		glm::mat4 UniformTrans = glm::mat4(1.0f);
 		
 		void init();//初始化Vulkan
 		vk::CommandPool cmdPool_;//已弃用
@@ -55,8 +57,8 @@ namespace toy2d
 		std::unique_ptr<Buffer> hostIndicesBuffer_;//本地顶点索引缓冲
 		std::unique_ptr<Buffer> deviceIndicesBuffer_;
 
-		std::vector<std::unique_ptr<Buffer>> hostUniformBuffer_;//CPU的Uniformbuffer
-		std::vector<std::unique_ptr<Buffer>> deviceUniformBuffer_;//GPU的Uniformbuffer
+		std::vector<std::vector<std::unique_ptr<Buffer>>> hostUniformBuffer_;//CPU的Uniformbuffer
+		std::vector<std::vector<std::unique_ptr<Buffer>>> deviceUniformBuffer_;//GPU的Uniformbuffer
 
 		vk::DescriptorPool descriptorPool_;
         std::vector<std::vector<vk::DescriptorSet>> sets_;
@@ -84,3 +86,5 @@ namespace toy2d
 		void copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset);
 	};
 }
+
+#endif // !RENDERER

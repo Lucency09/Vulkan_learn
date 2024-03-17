@@ -26,8 +26,8 @@ namespace toy2d
 		this->updateUniformData();
 
 		this->createDescriptorPool();
-		this->allocateSets(2);
-		this->updateSets(2);
+		this->allocateSets(static_cast<int>(UBN::COLOR));
+		this->updateSets(static_cast<int>(UBN::COLOR));
 	}
 
     Renderer::~Renderer()
@@ -146,21 +146,25 @@ namespace toy2d
 
     void Renderer::createUniformBuffers()
     {
-        this->hostUniformBuffer_.resize(this->maxFlightCount_ * this->uniformCount_);//缓冲数乘以uniform变量数
-        this->deviceUniformBuffer_.resize(this->maxFlightCount_ * this->uniformCount_);
+        this->hostUniformBuffer_.resize(this->uniformCount_);//uniform变量数
+        this->deviceUniformBuffer_.resize(this->uniformCount_);
 
-        for (auto& buffer : this->hostUniformBuffer_)
-        {
-            buffer.reset(new Buffer(sizeof(UniformColor),
-                vk::BufferUsageFlagBits::eTransferSrc,
-                vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible));
+        for (auto& buffers : this->hostUniformBuffer_) {
+            buffers.resize(this->maxFlightCount_);
+            for (auto& buffer : buffers) {
+                buffer.reset(new Buffer(sizeof(UniformColor),//TODO: Uniformbuffer大小待整改
+                    vk::BufferUsageFlagBits::eTransferSrc,
+                    vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible));
+            }
         }
 
-        for (auto& buffer : this->deviceUniformBuffer_)
-        {
-            buffer.reset(new Buffer(sizeof(UniformColor),
-                vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer,
-                vk::MemoryPropertyFlagBits::eDeviceLocal));
+        for (auto& buffers : this->deviceUniformBuffer_) {
+            buffers.resize(this->maxFlightCount_);
+            for (auto& buffer : buffers) {
+                buffer.reset(new Buffer(sizeof(UniformColor),
+                    vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer,
+                    vk::MemoryPropertyFlagBits::eDeviceLocal));
+            }
         } 
     }
 
@@ -193,15 +197,15 @@ namespace toy2d
         this->updateIndicesData();
     }
 
-    void Renderer::updateUniformData()
+    void Renderer::updateUniformData()//TODO: 待整改，添加binding号
     {
-        for (int i = 0; i < hostUniformBuffer_.size(); i++) {
-            auto& buffer = hostUniformBuffer_[i];
+        for (int i = 0; i < hostUniformBuffer_[static_cast<int>(UBN::COLOR)].size(); i++) {
+            auto& buffer = hostUniformBuffer_[static_cast<int>(UBN::COLOR)][i];
             void* ptr = Context::GetInstance().get_device().mapMemory(buffer->memory, 0, buffer->size);
             memcpy(ptr, &UniformColor, sizeof(UniformColor));
             Context::GetInstance().get_device().unmapMemory(buffer->memory);
 
-            copyBuffer(buffer->buffer, deviceUniformBuffer_[i]->buffer, buffer->size, 0, 0);
+            copyBuffer(buffer->buffer, deviceUniformBuffer_[static_cast<int>(UBN::COLOR)][i]->buffer, buffer->size, 0, 0);
         }
     }
 
@@ -236,9 +240,9 @@ namespace toy2d
         for (int i = 0; i < sets_[binding_num].size(); i++) {
             auto& set = sets_[binding_num][i];
             vk::DescriptorBufferInfo bufferInfo;
-            bufferInfo.setBuffer(this->deviceUniformBuffer_[i]->buffer)//此处将set和buffer绑定
+            bufferInfo.setBuffer(this->deviceUniformBuffer_[static_cast<int>(UBN::COLOR)][i]->buffer)//此处将set和buffer绑定
                 .setOffset(0)
-                .setRange(this->deviceUniformBuffer_[i]->size);
+                .setRange(this->deviceUniformBuffer_[static_cast<int>(UBN::COLOR)][i]->size);
 
             vk::WriteDescriptorSet writer;
             writer.setDescriptorType(vk::DescriptorType::eUniformBuffer)
@@ -297,6 +301,9 @@ namespace toy2d
 
         auto imageIndex = result.value;
 
+        //更新UniformBuffer
+        this->updateUniformData();
+
         //开始向commandbuffer中填充命令
         this->cmdBuf_[curFrame_].reset();//重置Buffer
         vk::CommandBufferBeginInfo begininfo;
@@ -320,9 +327,22 @@ namespace toy2d
             {
                 this->cmdBuf_[curFrame_].bindPipeline(vk::PipelineBindPoint::eGraphics, renderProcess.get_pipeline());//绑定管线
                 vk::DeviceSize offset = 0;
-                this->cmdBuf_[curFrame_].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, Context::GetInstance().get_render_process().get_layout(), 0, this->sets_[2][curFrame_], {});
-                this->cmdBuf_[curFrame_].bindVertexBuffers(0, deviceVertexBuffer_->buffer, offset);//将deviceVertexBuffer_的数据传入，第一个参数指代存在多个buffer时使用第几个
-                this->cmdBuf_[curFrame_].bindIndexBuffer(this->deviceIndicesBuffer_->buffer, 0, vk::IndexType::eUint32);
+                this->cmdBuf_[curFrame_].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, 
+                                Context::GetInstance().get_render_process().get_layout(), 
+                                0, 
+                                this->sets_[static_cast<int>(UBN::COLOR)][curFrame_], 
+                                {});
+                this->cmdBuf_[curFrame_].bindVertexBuffers(0, 
+                                deviceVertexBuffer_->buffer, 
+                                offset);//将deviceVertexBuffer_的数据传入，第一个参数指代存在多个buffer时使用第几个
+                this->cmdBuf_[curFrame_].bindIndexBuffer(this->deviceIndicesBuffer_->buffer, 
+                                0, 
+                                vk::IndexType::eUint32);
+                this->cmdBuf_[curFrame_].pushConstants(Context::GetInstance().get_render_process().get_layout(),
+                                vk::ShaderStageFlagBits::eVertex,
+                                0,
+                                sizeof(UniformTrans),
+                                &UniformTrans);//将UniformTrans的数据传入
                 //this->cmdBuf_[curFrame_].draw(3, 1, 0, 0); //绘制3个顶点、1个图元，第0个顶点开始绘制，第0个Instance开始
                 this->cmdBuf_[curFrame_].drawIndexed(6, 1, 0, 0, 0);//绘制6个顶点，1个实例，第0个顶点开始绘制，第0个Instance开始
             }
@@ -367,4 +387,5 @@ namespace toy2d
     {
         this->indices = std::move(ind);
     }
+
 }

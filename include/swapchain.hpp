@@ -4,7 +4,8 @@
 #include <iostream>
 #include <optional>
 
-
+#ifndef SWAPCHAIN
+#define SWAPCHAIN
 
 namespace toy2d
 {
@@ -41,3 +42,4 @@ namespace toy2d
 		
 	};
 }
+#endif // !SWAPCHAIN

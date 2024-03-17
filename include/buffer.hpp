@@ -2,6 +2,8 @@
 
 #include "vulkan/vulkan.hpp"
 
+#ifndef BUFFER
+#define BUFFER
 
 namespace toy2d {
 
@@ -30,3 +32,4 @@ namespace toy2d {
     };
 
 }
+#endif // !BUFFER

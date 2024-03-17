@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#ifndef SHADER
+#define SHADER
 
 namespace toy2d
 {
@@ -29,3 +31,4 @@ namespace toy2d
 		void initStage();
 	};
 }
+#endif // !SHADER

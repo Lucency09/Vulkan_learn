@@ -141,6 +141,15 @@ namespace toy2d
 		return this->setLayout;
 	}
 
+	vk::PushConstantRange RenderProcess::GetPushConstantRange() const
+	{
+		vk::PushConstantRange range;
+		range.setOffset(0)
+			.setSize(sizeof(glm::mat4))
+			.setStageFlags(vk::ShaderStageFlagBits::eVertex);//在顶点着色器中使用
+		return range;
+	}
+
 	RenderProcess::~RenderProcess()
 	{
 		auto& device = Context::GetInstance().get_device();
@@ -161,7 +170,10 @@ namespace toy2d
 	vk::PipelineLayout RenderProcess::createLayout()
 	{
 		vk::PipelineLayoutCreateInfo createInfo;
-		createInfo.setSetLayouts(this->setLayout);//放进去第一个描述集，故其set编号为0
+
+		auto range = this->GetPushConstantRange();
+		createInfo.setSetLayouts(this->setLayout)//放进去第一个描述集，故其set编号为0
+			.setPushConstantRanges(range);//设置推送常量布局
 
 		return Context::GetInstance().get_device().createPipelineLayout(createInfo);
 	}

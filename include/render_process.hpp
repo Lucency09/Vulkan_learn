@@ -3,6 +3,9 @@
 #include "vulkan/vulkan.hpp"
 #include "shader.hpp"
 
+#ifndef RENDER_PROCESS
+#define RENDER_PROCESS
+
 namespace toy2d
 {
 	class RenderProcess final
@@ -15,6 +18,7 @@ namespace toy2d
 		vk::RenderPass& get_renderPass();
 		vk::Pipeline& get_pipeline();
 		vk::DescriptorSetLayout& get_setLayout();
+		vk::PushConstantRange GetPushConstantRange() const;//用于指定push常量布局
 		
 
 		~RenderProcess();
@@ -33,3 +37,4 @@ namespace toy2d
 		void InitRenderPass();
 	};
 }
+#endif // !RENDER_PROCESS

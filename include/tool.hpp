@@ -11,6 +11,9 @@
 
 #include "vulkan/vulkan.hpp" 
 
+#ifndef TOOL
+#define TOOL
+
 typedef std::function<vk::SurfaceKHR(vk::Instance)> CreateSurfaceFunc;
 namespace toy2d 
 {
@@ -136,3 +139,4 @@ namespace toy2d
         std::cout << "½áÊø±àÒëshader" << std::endl;
     }
 }
+#endif // !TOOL

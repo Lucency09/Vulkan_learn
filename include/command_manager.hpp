@@ -2,6 +2,9 @@
 
 #include "vulkan/vulkan.hpp"
 
+#ifndef COMMAND_MANAGER
+#define COMMAND_MANAGER
+
 namespace toy2d {
 
     class CommandManager final 
@@ -22,3 +25,4 @@ namespace toy2d {
     };
 
 }
+#endif // !COMMAND_MANAGER

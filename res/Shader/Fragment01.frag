@@ -2,7 +2,7 @@
 
 layout(location = 0) in vec4 moutColor;
 
-layout(binding = 2) uniform Color {
+layout(binding = 1) uniform Color {
     vec3 color;
 } color;
 
