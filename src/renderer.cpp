@@ -23,11 +23,10 @@ namespace toy2d
 		this->createUniformBuffers();
 
 		this->updateBuffer();
-		this->updateUniformData();
 
 		this->createDescriptorPool();
-		this->allocateSets(static_cast<int>(UBN::COLOR));
-		this->updateSets(static_cast<int>(UBN::COLOR));
+		this->allocateSets();
+		this->updateSets();
 	}
 
     Renderer::~Renderer()
@@ -149,19 +148,21 @@ namespace toy2d
         this->hostUniformBuffer_.resize(this->uniformCount_);//uniform变量数
         this->deviceUniformBuffer_.resize(this->uniformCount_);
 
-        for (auto& buffers : this->hostUniformBuffer_) {
+        for (int i = 0; i < this->hostUniformBuffer_.size(); i++) {
+            auto& buffers = this->hostUniformBuffer_[i];
             buffers.resize(this->maxFlightCount_);
             for (auto& buffer : buffers) {
-                buffer.reset(new Buffer(sizeof(UniformColor),//TODO: Uniformbuffer大小待整改
+                buffer.reset(new Buffer(this->UniformMemorySize[i],
                     vk::BufferUsageFlagBits::eTransferSrc,
                     vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible));
             }
         }
 
-        for (auto& buffers : this->deviceUniformBuffer_) {
+        for (int i = 0; i < this->deviceUniformBuffer_.size(); i++) {
+            auto& buffers = this->deviceUniformBuffer_[i];
             buffers.resize(this->maxFlightCount_);
             for (auto& buffer : buffers) {
-                buffer.reset(new Buffer(sizeof(UniformColor),
+                buffer.reset(new Buffer(this->UniformMemorySize[i],
                     vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer,
                     vk::MemoryPropertyFlagBits::eDeviceLocal));
             }
@@ -197,15 +198,19 @@ namespace toy2d
         this->updateIndicesData();
     }
 
-    void Renderer::updateUniformData()//TODO: 待整改，添加binding号
+    void Renderer::updateUniformData(int uniform_binding)
     {
-        for (int i = 0; i < hostUniformBuffer_[static_cast<int>(UBN::COLOR)].size(); i++) {
-            auto& buffer = hostUniformBuffer_[static_cast<int>(UBN::COLOR)][i];
+        for (int i = 0; i < hostUniformBuffer_[uniform_binding].size(); i++) {
+            auto& buffer = hostUniformBuffer_[uniform_binding][i];
             void* ptr = Context::GetInstance().get_device().mapMemory(buffer->memory, 0, buffer->size);
-            memcpy(ptr, &UniformColor, sizeof(UniformColor));
+            if(uniform_binding == static_cast<int>(UBN::COLOR))
+                memcpy(ptr, &this->UniformColor, sizeof(UniformColor));
+            else if(uniform_binding == static_cast<int>(UBN::MVP))
+                memcpy(ptr, &this->mvp, sizeof(mvp));
+
             Context::GetInstance().get_device().unmapMemory(buffer->memory);
 
-            copyBuffer(buffer->buffer, deviceUniformBuffer_[static_cast<int>(UBN::COLOR)][i]->buffer, buffer->size, 0, 0);
+            copyBuffer(buffer->buffer, deviceUniformBuffer_[uniform_binding][i]->buffer, buffer->size, 0, 0);
         }
     }
 
@@ -215,43 +220,62 @@ namespace toy2d
         vk::DescriptorPoolCreateInfo createInfo;
         vk::DescriptorPoolSize poolSize;
         poolSize.setType(vk::DescriptorType::eUniformBuffer)
-            .setDescriptorCount(this->uniformCount_);
+            .setDescriptorCount(this->maxFlightCount_);
+        std::vector<vk::DescriptorPoolSize> sizes(2, poolSize);
         createInfo.setMaxSets(this->maxFlightCount_ * this->uniformCount_)
-            .setPoolSizes(poolSize);
+            .setPoolSizes(sizes);
         this->descriptorPool_ = Context::GetInstance().get_device().createDescriptorPool(createInfo);
-        this->sets_.resize(this->uniformCount_);
+        this->sets_.resize(this->maxFlightCount_);
     }
 
-    void Renderer::allocateSets(int binding_num)
+    void Renderer::allocateSets()
     {
         std::vector<vk::DescriptorSetLayout> layouts(this->maxFlightCount_, Context::GetInstance().get_render_process().get_setLayout());
         //get_setLayout()返回值是一个引用，所以这里不需要使用std::move
         vk::DescriptorSetAllocateInfo allocInfo;
         allocInfo.setDescriptorPool(this->descriptorPool_)
-            .setDescriptorSetCount(this->maxFlightCount_)
+            //.setDescriptorSetCount(this->uniformCount_)
             .setSetLayouts(layouts);
 
-        this->sets_[binding_num] = Context::GetInstance().get_device().allocateDescriptorSets(allocInfo);
+        this->sets_ = Context::GetInstance().get_device().allocateDescriptorSets(allocInfo);
         //sets_ 是从this->descriptorPool_中创建的，this->descriptorPool_销毁时也跟着被销毁了，不需要手动回收
     }
 
-    void Renderer::updateSets(int binding_num)
-    {
-        for (int i = 0; i < sets_[binding_num].size(); i++) {
-            auto& set = sets_[binding_num][i];
-            vk::DescriptorBufferInfo bufferInfo;
-            bufferInfo.setBuffer(this->deviceUniformBuffer_[static_cast<int>(UBN::COLOR)][i]->buffer)//此处将set和buffer绑定
+    void Renderer::updateSets()
+    {// TODO: set布局待更改
+        int i = 0;
+        for (auto& set : this->sets_) {
+            std::array<vk::DescriptorBufferInfo, 2> bufferInfos;
+            //分别绑定Color和MVP的uniformbuffer
+            bufferInfos[static_cast<int>(UBN::COLOR)]
+                .setBuffer(this->deviceUniformBuffer_[static_cast<int>(UBN::COLOR)][i]->buffer)//此处将set和buffer绑定
                 .setOffset(0)
                 .setRange(this->deviceUniformBuffer_[static_cast<int>(UBN::COLOR)][i]->size);
 
-            vk::WriteDescriptorSet writer;
-            writer.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-                .setBufferInfo(bufferInfo)
-                .setDstBinding(binding_num)
+            bufferInfos[static_cast<int>(UBN::MVP)]
+                .setBuffer(this->deviceUniformBuffer_[static_cast<int>(UBN::MVP)][i]->buffer)
+                .setOffset(0)
+                .setRange(this->deviceUniformBuffer_[static_cast<int>(UBN::MVP)][i]->size);
+
+            std::array <vk::WriteDescriptorSet, 2> writers;
+            writers[static_cast<int>(UBN::COLOR)]
+                .setDescriptorType(vk::DescriptorType::eUniformBuffer)
+                .setBufferInfo(bufferInfos[static_cast<int>(UBN::COLOR)])
+                .setDstBinding(static_cast<int>(UBN::COLOR))
                 .setDstSet(set)
                 .setDstArrayElement(0)
                 .setDescriptorCount(1);
-            Context::GetInstance().get_device().updateDescriptorSets(writer, {});
+
+            writers[static_cast<int>(UBN::MVP)]
+                .setDescriptorType(vk::DescriptorType::eUniformBuffer)
+                .setBufferInfo(bufferInfos[static_cast<int>(UBN::MVP)])
+                .setDstBinding(static_cast<int>(UBN::MVP))
+                .setDstSet(set)
+                .setDstArrayElement(0)
+                .setDescriptorCount(1);
+
+            Context::GetInstance().get_device().updateDescriptorSets(writers, {});
+            i++;
         }
     }
 
@@ -302,8 +326,12 @@ namespace toy2d
         auto imageIndex = result.value;
 
         //更新UniformBuffer
-        this->updateUniformData();
-
+        this->updateUniformData(static_cast<int>(UBN::COLOR));
+        //this->updateSets(static_cast<int>(UBN::COLOR));
+        //TODO: 更新MVP
+        this->updateUniformData(static_cast<int>(UBN::MVP));
+        //this->updateSets(static_cast<int>(UBN::MVP));
+        
         //开始向commandbuffer中填充命令
         this->cmdBuf_[curFrame_].reset();//重置Buffer
         vk::CommandBufferBeginInfo begininfo;
@@ -313,7 +341,7 @@ namespace toy2d
             vk::RenderPassBeginInfo renderPassBegin;
             vk::Rect2D area;
             vk::ClearValue clearValue;
-            clearValue.color = vk::ClearColorValue(std::array<float, 4>{0.1f, 0.1f, 0.1f, 1.0f});
+            clearValue.color = vk::ClearColorValue(std::array<float, 4>{0.0f, 0.0f, 0.0f, 0.0f});
 
             area.setOffset({})
                 .setExtent(swapchain->get_info().imageExtent);//设置屏幕大小，从swapchain中获取
@@ -325,24 +353,30 @@ namespace toy2d
 
             this->cmdBuf_[curFrame_].beginRenderPass(&renderPassBegin, vk::SubpassContents::eInline);
             {
-                this->cmdBuf_[curFrame_].bindPipeline(vk::PipelineBindPoint::eGraphics, renderProcess.get_pipeline());//绑定管线
+                this->cmdBuf_[curFrame_].bindPipeline(vk::PipelineBindPoint::eGraphics, 
+                                renderProcess.get_pipeline());//绑定管线
                 vk::DeviceSize offset = 0;
+                
                 this->cmdBuf_[curFrame_].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, 
                                 Context::GetInstance().get_render_process().get_layout(), 
-                                0, 
-                                this->sets_[static_cast<int>(UBN::COLOR)][curFrame_], 
+                                0,//这个参数是指定在layout中的第几个set，同时是shader程序中的set=?，这里是0
+                                this->sets_[curFrame_],
                                 {});
+                
                 this->cmdBuf_[curFrame_].bindVertexBuffers(0, 
                                 deviceVertexBuffer_->buffer, 
                                 offset);//将deviceVertexBuffer_的数据传入，第一个参数指代存在多个buffer时使用第几个
+
                 this->cmdBuf_[curFrame_].bindIndexBuffer(this->deviceIndicesBuffer_->buffer, 
                                 0, 
                                 vk::IndexType::eUint32);
+
                 this->cmdBuf_[curFrame_].pushConstants(Context::GetInstance().get_render_process().get_layout(),
                                 vk::ShaderStageFlagBits::eVertex,
                                 0,
                                 sizeof(UniformTrans),
                                 &UniformTrans);//将UniformTrans的数据传入
+
                 //this->cmdBuf_[curFrame_].draw(3, 1, 0, 0); //绘制3个顶点、1个图元，第0个顶点开始绘制，第0个Instance开始
                 this->cmdBuf_[curFrame_].drawIndexed(6, 1, 0, 0, 0);//绘制6个顶点，1个实例，第0个顶点开始绘制，第0个Instance开始
             }
@@ -386,6 +420,11 @@ namespace toy2d
     void Renderer::set_Index(std::vector<std::uint32_t> ind)
     {
         this->indices = std::move(ind);
+    }
+
+    void Renderer::random_rotation()
+    {
+        this->UniformTrans = getrotate(this->UniformTrans);
     }
 
 }

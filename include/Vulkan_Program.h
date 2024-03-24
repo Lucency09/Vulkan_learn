@@ -8,6 +8,7 @@
 #include <vector>
 #include <cstring>
 #include <iostream>
+#include <Windows.h>
 
 #include "context.hpp"
 
@@ -32,8 +33,6 @@ public:
     void Quit();
 
 private:
-    const uint32_t WIDTH = 800;
-    const uint32_t HEIGHT = 600;
     VkInstance instance;//存储Vulkan实例，通过context获取
     GLFWwindow* window;
     std::vector<const char*> glfwExtensions_vec;//存储需要的扩展

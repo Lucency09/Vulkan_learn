@@ -22,6 +22,7 @@ namespace toy2d {
 		
 		void set__Vertices(std::vector<Vertex> vex);
 		void set_Index(std::vector<std::uint32_t> ind);
+		void random_rotation();//生成随机旋转的UniformTrans矩阵
 
 	private:
 		int maxFlightCount_ = 2;//双缓冲
@@ -42,8 +43,16 @@ namespace toy2d {
 			3, 2, 1
 		};//顶点索引
 
+		MVP mvp = {
+			glm::mat4(1.0f),
+			glm::mat4(1.0f),
+			glm::mat4(1.0f)
+		};//MVP矩阵
+
 		glm::vec3 UniformColor{ 1, 0.5, 0 };
-		glm::mat4 UniformTrans = glm::mat4(1.0f);
+		glm::mat4 UniformTrans = glm::mat4(1.0f);//变换矩阵
+		std::vector<size_t> UniformMemorySize = {  sizeof(this->mvp), sizeof(this->UniformColor) };//uniform变量长度
+		
 		
 		void init();//初始化Vulkan
 		vk::CommandPool cmdPool_;//已弃用
@@ -61,7 +70,7 @@ namespace toy2d {
 		std::vector<std::vector<std::unique_ptr<Buffer>>> deviceUniformBuffer_;//GPU的Uniformbuffer
 
 		vk::DescriptorPool descriptorPool_;
-        std::vector<std::vector<vk::DescriptorSet>> sets_;
+        std::vector<vk::DescriptorSet> sets_;//描述符集，双缓冲，所以长度为2
 
 		void initCmdPool();//已弃用，功能转移到createCmdBuffers()
 		void allocCmdBuf();//已弃用，功能转移到createCmdBuffers()
@@ -77,10 +86,10 @@ namespace toy2d {
 		void createUniformBuffers(); //创建Uniform数据传输缓冲
 		void updateVertexData();//将顶点数据从CPU传输到GPU
 		void updateIndicesData();//将索引数据从CPU传输到GPU
-		void updateUniformData();//向Uniform缓冲中传入数据
+		void updateUniformData(int uniform_binding);//向Uniform缓冲中传入数据
 		void createDescriptorPool();
-		void allocateSets(int binding_num);
-		void updateSets(int binding_num);
+		void allocateSets();
+		void updateSets();
 
 		//                  源缓冲区，目标缓冲区，拷贝大小，源偏移，目标偏移
 		void copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset);

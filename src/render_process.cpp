@@ -173,7 +173,7 @@ namespace toy2d
 
 		auto range = this->GetPushConstantRange();
 		createInfo.setSetLayouts(this->setLayout)//放进去第一个描述集，故其set编号为0
-			.setPushConstantRanges(range);//设置推送常量布局
+					.setPushConstantRanges(range);//设置推送常量布局
 
 		return Context::GetInstance().get_device().createPipelineLayout(createInfo);
 	}

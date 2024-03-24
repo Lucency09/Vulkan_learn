@@ -9,6 +9,7 @@
 #include "render_process.hpp"
 #include "renderer.hpp"
 #include "command_manager.hpp"
+#include "math.hpp"
 
 #ifndef CONTEXT
 #define CONTEXT

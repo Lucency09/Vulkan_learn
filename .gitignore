@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 
 *.spv
+/res/Spir-v/Vertex01.spv

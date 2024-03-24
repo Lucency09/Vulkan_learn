@@ -24,9 +24,9 @@ void Vulkan_program::Init()
             return surface;
         });
 
-    toy2d::Context::GetInstance().InitSwapchain(1024, 720);
+    toy2d::Context::GetInstance().InitSwapchain(toy2d::WINDOWS_WIDTH, toy2d::WINDOWS_HIGHT);
 
-    toy2d::Context::GetInstance().InitRender_process("res/Spir-v/Vertex01.spv", "res/Spir-v/Fragment01.spv", HEIGHT, WIDTH);
+    toy2d::Context::GetInstance().InitRender_process("res/Spir-v/Vertex01.spv", "res/Spir-v/Fragment01.spv", toy2d::WINDOWS_HIGHT, toy2d::WINDOWS_WIDTH);
 
     toy2d::Context::GetInstance().InitRenderer();
 }
@@ -52,7 +52,7 @@ void Vulkan_program::initWindow()
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    this->window = glfwCreateWindow(this->WIDTH, this->HEIGHT, "Vulkan", nullptr, nullptr);
+    this->window = glfwCreateWindow(toy2d::WINDOWS_WIDTH, toy2d::WINDOWS_HIGHT, "Vulkan", nullptr, nullptr);
 }
 
 void Vulkan_program::initVulkan()
@@ -68,6 +68,8 @@ void Vulkan_program::mainLoop()
     {
         glfwPollEvents();
         render.Draw();
+        render.random_rotation();
+        Sleep(15);
     }
 }
 
