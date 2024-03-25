@@ -11,6 +11,7 @@
 #include <Windows.h>
 
 #include "context.hpp"
+#include "camera.hpp"
 
 
 #ifdef NDEBUG

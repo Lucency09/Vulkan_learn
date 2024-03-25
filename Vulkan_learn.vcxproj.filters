@@ -54,6 +54,9 @@
     <ClCompile Include="src\math.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\camera.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Vulkan_Program.h">
@@ -87,6 +90,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\uniform.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\camera.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

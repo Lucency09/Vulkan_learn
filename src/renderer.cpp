@@ -415,16 +415,23 @@ namespace toy2d
     void Renderer::set__Vertices(std::vector<Vertex> vex)
     {
 		this->vertices = std::move(vex);
+        this->updateVertexData();
     }
 
     void Renderer::set_Index(std::vector<std::uint32_t> ind)
     {
         this->indices = std::move(ind);
+        this->updateIndicesData();
     }
 
     void Renderer::random_rotation()
     {
         this->UniformTrans = getrotate(this->UniformTrans);
+    }
+
+    void Renderer::set_UniformMVP(const MVP& mvp)
+    {
+		this->mvp = mvp;
     }
 
 }

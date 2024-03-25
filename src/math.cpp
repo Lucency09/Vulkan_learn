@@ -34,7 +34,7 @@ namespace toy2d {
     {
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_real_distribution<> dis(0.0, 5.0);
+        std::uniform_real_distribution<> dis(0.0, 1.0);
 
         float randomAngleX = glm::radians(dis(gen));
         float randomAngleY = glm::radians(dis(gen));
@@ -47,5 +47,21 @@ namespace toy2d {
 
         return oldmat4;
     }
+
+
+	glm::mat4 gettranslate(glm::mat4& oldmat4)
+	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_real_distribution<> dis(-1.0, 1.0);
+
+		float randomX = dis(gen);
+		float randomY = dis(gen);
+		float randomZ = dis(gen);
+
+		oldmat4 = glm::translate(oldmat4, glm::vec3(randomX, randomY, randomZ));
+
+		return oldmat4;
+	}
 
 }

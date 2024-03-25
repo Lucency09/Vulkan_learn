@@ -136,6 +136,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\buffer.cpp" />
+    <ClCompile Include="src\camera.cpp" />
     <ClCompile Include="src\command_manager.cpp" />
     <ClCompile Include="src\context.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -149,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\buffer.hpp" />
+    <ClInclude Include="include\camera.hpp" />
     <ClInclude Include="include\command_manager.hpp" />
     <ClInclude Include="include\context.hpp" />
     <ClInclude Include="include\renderer.hpp" />

@@ -23,6 +23,7 @@ namespace toy2d {
 		void set__Vertices(std::vector<Vertex> vex);
 		void set_Index(std::vector<std::uint32_t> ind);
 		void random_rotation();//生成随机旋转的UniformTrans矩阵
+		void set_UniformMVP(const MVP& mvp);
 
 	private:
 		int maxFlightCount_ = 2;//双缓冲
@@ -51,7 +52,7 @@ namespace toy2d {
 
 		glm::vec3 UniformColor{ 1, 0.5, 0 };
 		glm::mat4 UniformTrans = glm::mat4(1.0f);//变换矩阵
-		std::vector<size_t> UniformMemorySize = {  sizeof(this->mvp), sizeof(this->UniformColor) };//uniform变量长度
+		std::vector<size_t> UniformMemorySize = { sizeof(this->mvp), sizeof(this->UniformColor) };//uniform变量长度(必须按照binding值进行排序)
 		
 		
 		void init();//初始化Vulkan
