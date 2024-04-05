@@ -1,4 +1,4 @@
-#include "camera.hpp"
+#include "Control/include/camera.hpp"
 namespace toy2d
 {
 	Camera::Camera()

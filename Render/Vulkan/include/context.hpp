@@ -4,12 +4,12 @@
 #include <iostream>
 #include <optional>
 
-#include "tool.hpp"
+#include "Render/Common/include/tool.hpp"
 #include "swapchain.hpp"
 #include "render_process.hpp"
 #include "renderer.hpp"
 #include "command_manager.hpp"
-#include "math.hpp"
+#include "Render/Common/include/math.hpp"
 
 #ifndef CONTEXT
 #define CONTEXT

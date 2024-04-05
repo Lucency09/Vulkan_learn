@@ -1,12 +1,13 @@
-    #include "Vulkan_Program.h"
+#include "Render/include/Vulkan_Program.h"
 #include <iostream>
 
 
 int main() 
 {
-
-    toy2d::comile_shader("res/Shader/", "res/Spir-v/");
-
+    //toy2d::comile_shader("res/Shader/", "res/Spir-v/");
+    toy2d::comile_shader("E:\\myproject\\C++project\\Vulkan_learn\\res\\Shader\\",
+        "E:\\myproject\\C++project\\Vulkan_learn\\res\\Spir-v\\");
+    
     
     Vulkan_program app;
     try {

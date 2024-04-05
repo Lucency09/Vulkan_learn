@@ -10,8 +10,8 @@
 #include <iostream>
 #include <Windows.h>
 
-#include "context.hpp"
-#include "camera.hpp"
+#include "Render/Vulkan/include/context.hpp"
+#include "Control/include/camera.hpp"
 
 
 #ifdef NDEBUG

@@ -3,9 +3,9 @@
 #include <vulkan/vulkan.hpp>
 #include <map>
 
-#include "math.hpp"
+#include "Render/Common/include/math.hpp"
 #include "buffer.hpp"
-#include "uniform.hpp"
+#include "Render/Common/include/uniform.hpp"
 
 #ifndef RENDERER
 #define RENDERER

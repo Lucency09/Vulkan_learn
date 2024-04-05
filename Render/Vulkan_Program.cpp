@@ -1,4 +1,4 @@
-#include "Vulkan_Program.h"
+#include "Render/include/Vulkan_Program.h"
 
 
 Vulkan_program::Vulkan_program()
@@ -26,7 +26,10 @@ void Vulkan_program::Init()
 
     toy2d::Context::GetInstance().InitSwapchain(toy2d::WINDOWS_WIDTH, toy2d::WINDOWS_HIGHT);
 
-    toy2d::Context::GetInstance().InitRender_process("res/Spir-v/Vertex01.spv", "res/Spir-v/Fragment01.spv", toy2d::WINDOWS_HIGHT, toy2d::WINDOWS_WIDTH);
+    //toy2d::Context::GetInstance().InitRender_process("res/Spir-v/Vertex01.spv", "res/Spir-v/Fragment01.spv", toy2d::WINDOWS_HIGHT, toy2d::WINDOWS_WIDTH);
+    toy2d::Context::GetInstance().InitRender_process("E:\\myproject\\C++project\\Vulkan_learn\\res\\Spir-v\\Vertex01.spv", 
+        "E:\\myproject\\C++project\\Vulkan_learn\\res\\Spir-v\\Fragment01.spv", toy2d::WINDOWS_HIGHT, toy2d::WINDOWS_WIDTH);
+
 
     toy2d::Context::GetInstance().InitRenderer();
 }
@@ -64,12 +67,14 @@ void Vulkan_program::initVulkan()
 void Vulkan_program::mainLoop()
 {
     auto& render = toy2d::Context::GetInstance().get_renderer();
+    toy2d::Camera camera;
+    render.set_UniformMVP(camera.get_MVP());//设置uniformMVP
     while (!glfwWindowShouldClose(this->window))
     {
         glfwPollEvents();
-        render.Draw();
-        render.random_rotation();
-        Sleep(15);
+        render.Draw();//绘制
+        render.random_rotation();//随机旋转
+        Sleep(5);//延时
     }
 }
 
