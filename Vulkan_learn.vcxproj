@@ -104,7 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(VK_SDK_PATH)\Include;$(LocalDebuggerWorkingDirectory)Dependencies\glm;$(LocalDebuggerWorkingDirectory)Dependencies\glfw-3.3.8.bin.WIN64\include;$(LocalDebuggerWorkingDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VK_SDK_PATH)\Include;$(LocalDebuggerWorkingDirectory)Dependencies\glm;$(LocalDebuggerWorkingDirectory)Dependencies\glfw-3.3.8.bin.WIN64\include;$(LocalDebuggerWorkingDirectory);$(LocalDebuggerWorkingDirectory)Dependencies\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -122,7 +122,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(VK_SDK_PATH)\Include;$(LocalDebuggerWorkingDirectory)Dependencies\glm;$(LocalDebuggerWorkingDirectory)Dependencies\glfw-3.3.8.bin.WIN64\include;$(LocalDebuggerWorkingDirectory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VK_SDK_PATH)\Include;$(LocalDebuggerWorkingDirectory)Dependencies\glm;$(LocalDebuggerWorkingDirectory)Dependencies\glfw-3.3.8.bin.WIN64\include;$(LocalDebuggerWorkingDirectory);$(LocalDebuggerWorkingDirectory)Dependencies\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -139,6 +139,7 @@
     <ClCompile Include="Control\camera.cpp" />
     <ClCompile Include="Render\Vulkan\command_manager.cpp" />
     <ClCompile Include="Render\Vulkan\context.cpp" />
+    <ClCompile Include="Render\Vulkan\texture.cpp" />
     <ClCompile Include="Test\FunctionTest\main.cpp" />
     <ClCompile Include="Render\Common\math.cpp" />
     <ClCompile Include="Render\Vulkan\renderer.cpp" />
@@ -161,6 +162,7 @@
     <ClInclude Include="Render\Common\include\uniform.hpp" />
     <ClInclude Include="Render\Common\include\math.hpp" />
     <ClInclude Include="Render\include\Vulkan_Program.h" />
+    <ClInclude Include="Render\Vulkan\include\texture.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\Shader\Fragment.shader" />

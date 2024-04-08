@@ -44,16 +44,7 @@ namespace toy2d {
 		info.size = requirements.size;
 
 		auto properties = Context::GetInstance().get_phyDevice().getMemoryProperties();//当前硬件设备支持的内存类型列表
-		for (int i = 0; i < properties.memoryTypeCount; i++) 
-		{
-			if ((1 << i) & requirements.memoryTypeBits &&//该位值为1，表示硬件支持这个类型的内存
-				properties.memoryTypes[i].propertyFlags & property) //该内存类型就是需要指定的内存类型(入参property)
-			{
-				info.index = i;
-				break;
-			}
-		}
-
+		info.index = Context::GetInstance().QueryBufferMemTypeIndex(requirements.memoryTypeBits, property);
 		return info;
 	}
 

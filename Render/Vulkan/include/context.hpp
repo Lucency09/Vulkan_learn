@@ -51,8 +51,10 @@ namespace toy2d
 		Renderer& get_renderer();
 		void initCommandPool();
 		std::unique_ptr<CommandManager>& get_commandManager();
-		
-		
+
+		//查询缓冲区内存类型
+		std::uint32_t QueryBufferMemTypeIndex(std::uint32_t type, vk::MemoryPropertyFlags flag);
+
 	private:
 		Context(std::vector<const char*>& glfwExtensions, CreateSurfaceFunc func);
 		~Context();

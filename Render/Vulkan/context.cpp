@@ -231,4 +231,18 @@ namespace toy2d
 		graphcisQueue = device.getQueue(queueFamilyIndices.graphicsQueue.value(), 0);
 		presentQueue = device.getQueue(queueFamilyIndices.presentQueue.value(), 0);
 	}
+
+	std::uint32_t Context::QueryBufferMemTypeIndex(std::uint32_t type, vk::MemoryPropertyFlags flag)
+	{
+		auto property = Context::GetInstance().get_phyDevice().getMemoryProperties();
+
+		for (std::uint32_t i = 0; i < property.memoryTypeCount; i++) {
+			if ((1 << i) & type &&//该位值为1时,表示硬件支持这个类型的内存
+				property.memoryTypes[i].propertyFlags & flag) //该内存类型就是需要指定的内存类型(入参property)
+			{
+				return i;
+			}
+		}
+		return 0;
+	}
 }

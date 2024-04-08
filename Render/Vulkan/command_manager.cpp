@@ -53,4 +53,8 @@ namespace toy2d {
         Context::GetInstance().get_device().freeCommandBuffers(pool_, buf);
     }
 
+    void CommandManager::ExecuteCmd(vk::Queue, RecordCmdFunc)
+    {
+    }
+
 }

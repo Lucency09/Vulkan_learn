@@ -30,6 +30,5 @@ namespace toy2d {
         //找到指定内存类型property在当前硬件设备中的所需宽度及编号
         MemoryInfo queryMemoryInfo(vk::MemoryPropertyFlags property);
     };
-
 }
 #endif // !BUFFER
