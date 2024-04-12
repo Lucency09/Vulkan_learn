@@ -6,7 +6,7 @@ namespace toy2d {
 
     std::vector<vk::VertexInputAttributeDescription> Vertex::GetAttributeDescription() {
         std::vector<vk::VertexInputAttributeDescription> descriptions;
-        descriptions.resize(2);
+        descriptions.resize(4);
         // Position attribute
         descriptions[0].setBinding(0)
             .setFormat(vk::Format::eR32G32B32Sfloat)//每个片元3个元素(x,y,z)
@@ -18,6 +18,18 @@ namespace toy2d {
             .setFormat(vk::Format::eR32G32B32Sfloat)
             .setLocation(1)
             .setOffset(offsetof(Vertex, color));
+
+        // normal attribute
+        descriptions[2].setBinding(0)
+            .setFormat(vk::Format::eR32G32B32Sfloat)
+            .setLocation(2)
+            .setOffset(offsetof(Vertex, normal));
+
+        // texCoord attribute
+        descriptions[3].setBinding(0)
+            .setFormat(vk::Format::eR32G32Sfloat)
+            .setLocation(3)
+            .setOffset(offsetof(Vertex, texCoord));
         return descriptions;
     }
 

@@ -25,7 +25,8 @@ namespace toy2d {
     {
         //TRANSFORM = 0 ,
         MVP = 0 ,
-        COLOR = 1
+        COLOR = 1,
+        SAMPLER = 2
 	};
     
     //Uniform内部成员数量
@@ -41,6 +42,7 @@ namespace toy2d {
         glm::vec3 position;//顶点坐标
         glm::vec3 color;//顶点颜色
         glm::vec3 normal;//顶点法向量
+        glm::vec2 texCoord;//顶点纹理坐标
 
         static std::vector<vk::VertexInputAttributeDescription> GetAttributeDescription();
         static vk::VertexInputBindingDescription GetBindingDescription();

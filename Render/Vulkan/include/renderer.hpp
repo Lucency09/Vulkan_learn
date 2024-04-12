@@ -4,8 +4,10 @@
 #include <map>
 
 #include "Render/Common/include/math.hpp"
-#include "buffer.hpp"
 #include "Render/Common/include/uniform.hpp"
+#include "Render/Vulkan/include/buffer.hpp"
+#include "Render/Vulkan/include/texture.hpp"
+
 
 #ifndef RENDERER
 #define RENDERER
@@ -31,10 +33,11 @@ namespace toy2d {
 		int uniformCount_ = 2;//uniform变量计数
 
 		std::vector<Vertex> vertices = {
-			Vertex{{-0.5, 0.5, 0}, {1.0, 0.0, 0.0}},
-			Vertex{{-0.5, -0.5, 0}, {0.0, 1.0, 0.0}},
-			Vertex{{0.5, 0.5, 0}, {0.0, 0.0, 1.0}},
-			Vertex{{0.5, -0.5, 0}, {1.0, 1.0, 1.0}},
+			//     顶点坐标，          颜色
+			Vertex{{-0.5, 0.5, 0}, {1.0, 0.0, 0.0},{},{0, 1}},
+			Vertex{{-0.5, -0.5, 0}, {0.0, 1.0, 0.0},{},{0, 0}},
+			Vertex{{0.5, 0.5, 0}, {0.0, 0.0, 1.0},{},{1, 1}},
+			Vertex{{0.5, -0.5, 0}, {1.0, 1.0, 1.0},{},{1, 0}},
 			//TODO: 立方体坐标
 
 		};//顶点坐标
@@ -73,6 +76,9 @@ namespace toy2d {
 		vk::DescriptorPool descriptorPool_;
         std::vector<vk::DescriptorSet> sets_;//描述符集，双缓冲，所以长度为2
 
+		std::unique_ptr<Texture> texture;
+		vk::Sampler sampler;
+
 		void initCmdPool();//已弃用，功能转移到createCmdBuffers()
 		void allocCmdBuf();//已弃用，功能转移到createCmdBuffers()
 
@@ -91,6 +97,8 @@ namespace toy2d {
 		void createDescriptorPool();
 		void allocateSets();
 		void updateSets();
+		void createSampler();
+		void createTexture(std::string TexPath);
 
 		//                  源缓冲区，目标缓冲区，拷贝大小，源偏移，目标偏移
 		void copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset);

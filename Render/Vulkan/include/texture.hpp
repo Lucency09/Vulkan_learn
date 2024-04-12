@@ -4,7 +4,7 @@
 #include <string_view>
 
 #include "Render/Vulkan/include/buffer.hpp"
-#include "Render/Vulkan/include/context.hpp"
+
 
 #ifndef TEXTURE
 #define TEXTURE
@@ -26,8 +26,8 @@ namespace toy2d {
         void allocMemory();
         uint32_t queryImageMemoryIndex();
 
-        void transitionImageLayoutFromUndefine2Dst();
-        void transitionImageLayoutFromDst2Optimal();
+        void transitionImageLayoutFromUndefine2Dst();//vk::ImageLayout::eUndefined -> vk::ImageLayout::eTransferDstOptimal
+        void transitionImageLayoutFromDst2Optimal();//vk::ImageLayout::eTransferDstOptimal -> vk::ImageLayout::eShaderReadOnlyOptimal
         void transformData2Image(Buffer&, uint32_t w, uint32_t h);
     };
 

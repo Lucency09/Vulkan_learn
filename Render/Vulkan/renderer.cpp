@@ -24,6 +24,9 @@ namespace toy2d
 
 		this->updateBuffer();
 
+        this->createTexture("res/Tex_img/test.png");
+        this->createSampler();
+
 		this->createDescriptorPool();
 		this->allocateSets();
 		this->updateSets();
@@ -221,7 +224,15 @@ namespace toy2d
         vk::DescriptorPoolSize poolSize;
         poolSize.setType(vk::DescriptorType::eUniformBuffer)
             .setDescriptorCount(this->maxFlightCount_);
-        std::vector<vk::DescriptorPoolSize> sizes(2, poolSize);
+        std::vector<vk::DescriptorPoolSize> sizes(2);
+
+        sizes[0]
+            .setType(vk::DescriptorType::eUniformBuffer)
+            .setDescriptorCount(this->maxFlightCount_);
+        sizes[1]
+            .setType(vk::DescriptorType::eCombinedImageSampler)
+            .setDescriptorCount(this->maxFlightCount_);
+
         createInfo.setMaxSets(this->maxFlightCount_ * this->uniformCount_)
             .setPoolSizes(sizes);
         this->descriptorPool_ = Context::GetInstance().get_device().createDescriptorPool(createInfo);
@@ -242,7 +253,7 @@ namespace toy2d
     }
 
     void Renderer::updateSets()
-    {// TODO: set布局待更改
+    {
         int i = 0;
         for (auto& set : this->sets_) {
             std::array<vk::DescriptorBufferInfo, 2> bufferInfos;
@@ -257,7 +268,7 @@ namespace toy2d
                 .setOffset(0)
                 .setRange(this->deviceUniformBuffer_[static_cast<int>(UBN::MVP)][i]->size);
 
-            std::array <vk::WriteDescriptorSet, 2> writers;
+            std::array <vk::WriteDescriptorSet, 3> writers;
             writers[static_cast<int>(UBN::COLOR)]
                 .setDescriptorType(vk::DescriptorType::eUniformBuffer)
                 .setBufferInfo(bufferInfos[static_cast<int>(UBN::COLOR)])
@@ -274,9 +285,48 @@ namespace toy2d
                 .setDstArrayElement(0)
                 .setDescriptorCount(1);
 
+            //Sampler
+            vk::DescriptorImageInfo imageInfo;
+            imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+                .setImageView(texture->view)
+                .setSampler(sampler);
+            writers[static_cast<int>(UBN::SAMPLER)]
+                .setImageInfo(imageInfo)
+                .setDstBinding(static_cast<int>(UBN::SAMPLER))
+                .setDstArrayElement(0)
+                .setDescriptorCount(1)
+                .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+                .setDstSet(set);
+
+
             Context::GetInstance().get_device().updateDescriptorSets(writers, {});
             i++;
         }
+    }
+
+    void Renderer::createSampler()
+    {
+        //Context::GetInstance().get_phyDevice().getProperties().limits.maxSamplerAnisotropy;//获取硬件支持最大各向异性过滤值
+        vk::SamplerCreateInfo createInfo;
+        createInfo
+            .setMagFilter(vk::Filter::eLinear)//设置放大后采样方式，这里是就临近点直接取样
+            .setMinFilter(vk::Filter::eLinear)//设置缩小后采样方式，这里是就临近点直接取样
+            .setAddressModeU(vk::SamplerAddressMode::eRepeat)//设置U轴的寻址模式，如果采样坐标超出纹理区域，这里是重复
+            .setAddressModeV(vk::SamplerAddressMode::eRepeat)
+            .setAddressModeW(vk::SamplerAddressMode::eRepeat)
+            .setAnisotropyEnable(false)//是否启用各向异性过滤，这里是不启用
+            //.setMaxAnisotropy(16)//各向异性过滤的最大值，这里是16
+            .setBorderColor(vk::BorderColor::eIntOpaqueBlack)//设置边界颜色，这里是不透明黑色，由于是寻址模式为重复，所以不会显示
+            .setUnnormalizedCoordinates(false)//是否使用非归一化坐标，这里是不使用
+            .setCompareEnable(false)//是否启用颜色比较，这里是不启用
+            //.setCompareOp(vk::CompareOp::eAlways)//设置颜色比较的方式，这里是总是通过
+            .setMipmapMode(vk::SamplerMipmapMode::eLinear);//设置mipmap采样方式，这里是线性插值
+        this->sampler = Context::GetInstance().get_device().createSampler(createInfo);
+    }
+
+    void Renderer::createTexture(std::string TexPath)
+    {
+        this->texture.reset(new Texture(TexPath));
     }
 
     void Renderer::copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset)
@@ -302,6 +352,8 @@ namespace toy2d
 
         Context::GetInstance().get_commandManager()->FreeCmd(cmdBuf);
     }
+
+
 
     void Renderer::Draw()
     {

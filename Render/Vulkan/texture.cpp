@@ -1,4 +1,5 @@
 #include "Render/Vulkan/include/texture.hpp"
+#include "Render/Vulkan/include/context.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -23,11 +24,11 @@ namespace toy2d {
 
         createImage(w, h);
         allocMemory();
-        Context::GetInstance().get_device().bindImageMemory(image, memory, 0);
+        Context::GetInstance().get_device().bindImageMemory(image, memory, 0);//绑定内存,对应bindBufferMemory
 
-        transitionImageLayoutFromUndefine2Dst();
-        transformData2Image(*buffer, w, h);
-        transitionImageLayoutFromDst2Optimal();
+        transitionImageLayoutFromUndefine2Dst();//第一次转换布局，从未定义到传输目标，使能传输
+        transformData2Image(*buffer, w, h);//将数据传输到图像
+        transitionImageLayoutFromDst2Optimal();//第二次转换布局，从传输目标到着色器只读，使能着色器读取
 
         createImageView();
 
@@ -36,9 +37,9 @@ namespace toy2d {
 
     Texture::~Texture() {
         auto& device = Context::GetInstance().get_device();
-        device.destroyImageView(view);
-        device.freeMemory(memory);
-        device.destroyImage(image);
+        device.destroyImageView(this->view);
+        device.freeMemory(this->memory);
+        device.destroyImage(this->image);
     }
 
     void Texture::createImage(uint32_t w, uint32_t h) {
@@ -53,14 +54,14 @@ namespace toy2d {
             //                   用于传输数据到图像           用于着色器读取(与shader中Sampler关键字对应)
             .setUsage(vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled)
             .setSamples(vk::SampleCountFlagBits::e1);//采样数(这里设置为对本身采样)
-        image = Context::GetInstance().get_device().createImage(createInfo);
+        this->image = Context::GetInstance().get_device().createImage(createInfo);
     }
 
     void Texture::allocMemory() {
         auto& device = Context::GetInstance().get_device();
         vk::MemoryAllocateInfo allocInfo;
         //获取图像内存需求(区别与buffer的getBufferMemoryRequirements)
-        auto requirements = device.getImageMemoryRequirements(image);
+        auto requirements = device.getImageMemoryRequirements(this->image);
         allocInfo.setAllocationSize(requirements.size);
 
         auto index = Context::GetInstance().QueryBufferMemTypeIndex(requirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
@@ -78,11 +79,11 @@ namespace toy2d {
                     .setBaseArrayLayer(0)
                     .setMipLevel(0)
                     .setLayerCount(1);
-                region.setBufferImageHeight(0)
+                region.setBufferImageHeight(0)//指定图像的高度，用于处理对齐问题，这里由于是RGBA，所以不需要处理
                     .setBufferOffset(0)
                     .setImageOffset(0)
                     .setImageExtent({ w, h, 1 })
-                    .setBufferRowLength(0)
+                    .setBufferRowLength(0)//指定缓冲区的行长度，用于处理对齐问题，这里由于是RGBA，所以不需要处理
                     .setImageSubresource(subsource);
                 cmdBuf.copyBufferToImage(buffer.buffer, image,
                     vk::ImageLayout::eTransferDstOptimal,
@@ -100,15 +101,15 @@ namespace toy2d {
                     .setLevelCount(1)
                     .setBaseMipLevel(0)
                     .setAspectMask(vk::ImageAspectFlagBits::eColor);
-                barrier.setImage(image)
-                    .setOldLayout(vk::ImageLayout::eUndefined)
-                    .setNewLayout(vk::ImageLayout::eTransferDstOptimal)
-                    .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+                barrier.setImage(this->image)//设置屏障barrier
+                    .setOldLayout(vk::ImageLayout::eUndefined)//未转换前为未定义布局
+                    .setNewLayout(vk::ImageLayout::eTransferDstOptimal)//转换后为传输目标布局
+                    .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)//只有一个命令队列，所以不需要指定队列
                     .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-                    .setDstAccessMask((vk::AccessFlagBits::eTransferWrite))
+                    .setDstAccessMask((vk::AccessFlagBits::eTransferWrite))//转换的时候可以写入的权限
                     .setSubresourceRange(range);
                 cmdBuf.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer,
-                    {}, {}, nullptr, barrier);
+                    {}, {}, nullptr, barrier);//执行屏障，eTopOfPipe表示管线的最开始，eTransfer表示传输阶段，屏障在这两个阶段之间
             });
     }
 
@@ -122,7 +123,7 @@ namespace toy2d {
                     .setLevelCount(1)
                     .setBaseMipLevel(0)
                     .setAspectMask(vk::ImageAspectFlagBits::eColor);
-                barrier.setImage(image)
+                barrier.setImage(this->image)
                     .setOldLayout(vk::ImageLayout::eTransferDstOptimal)
                     .setNewLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
                     .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
