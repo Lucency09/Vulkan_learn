@@ -24,7 +24,7 @@ namespace toy2d
 
 		this->updateBuffer();
 
-        this->createTexture("res/Tex_img/test.png");
+        this->createTexture("res/Tex_img/role.png");
         this->createSampler();
 
 		this->createDescriptorPool();
@@ -393,7 +393,7 @@ namespace toy2d
             vk::RenderPassBeginInfo renderPassBegin;
             vk::Rect2D area;
             vk::ClearValue clearValue;
-            clearValue.color = vk::ClearColorValue(std::array<float, 4>{0.0f, 0.0f, 0.0f, 0.0f});
+            clearValue.color = vk::ClearColorValue(std::array<float, 4>{0.3f, 0.2f, 0.1f, 0.0f});
 
             area.setOffset({})
                 .setExtent(swapchain->get_info().imageExtent);//设置屏幕大小，从swapchain中获取

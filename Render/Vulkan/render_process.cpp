@@ -62,15 +62,28 @@ namespace toy2d
 		//7. 深度测试、模板测试(跳过)	depth test  stencil test
 
 		//8. 色彩混合(透明、滤镜之类)	color blending
+		/*
+		 * newRGB = (srcFactor * srcRGB) <op> (dstFactor * dstRGB)
+		 * newA = (srcFactor * srcA) <op> (dstFactor * dstA)
+		 *
+		 * newRGB = 1 * srcRGB + (1 - srcA) * dstRGB
+		 * newA = srcA === 1 * srcA + 0 * dstA
+		 */
 		vk::PipelineColorBlendStateCreateInfo blend;
 		vk::PipelineColorBlendAttachmentState attachs;
 
-		attachs.setBlendEnable(false)
+		attachs.setBlendEnable(true)
 			.setColorWriteMask(vk::ColorComponentFlagBits::eA |
-							vk::ColorComponentFlagBits::eB |
-							vk::ColorComponentFlagBits::eG |
-							vk::ColorComponentFlagBits::eR);//纹理文件读取方式，这里4个通道都要读
-		blend.setLogicOpEnable(false)//关闭颜色融混
+								vk::ColorComponentFlagBits::eB |
+								vk::ColorComponentFlagBits::eG |
+								vk::ColorComponentFlagBits::eR)//纹理文件读取方式，这里4个通道都要读
+			.setSrcColorBlendFactor(vk::BlendFactor::eOne)//srcFactor
+				.setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)//dstFactor也就是1 - srcA
+				.setColorBlendOp(vk::BlendOp::eAdd)//<op>
+				.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)//srcA
+				.setDstAlphaBlendFactor(vk::BlendFactor::eZero)//(1 - srcA)
+				.setAlphaBlendOp(vk::BlendOp::eAdd);//<op>
+		blend.setLogicOpEnable(false)//关闭全局颜色融混
 			.setAttachments(attachs);
 		createinfo.setPColorBlendState(&blend);
 
