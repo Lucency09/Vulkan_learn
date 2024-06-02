@@ -4,10 +4,7 @@
 
 int main() 
 {
-    //toy2d::comile_shader("res/Shader/", "res/Spir-v/");
-    toy2d::comile_shader("E:\\myproject\\C++project\\Vulkan_learn\\res\\Shader\\",
-        "E:\\myproject\\C++project\\Vulkan_learn\\res\\Spir-v\\");
-    
+    toy2d::comile_shader("res/Shader/", "res/Spir-v/");
     
     Vulkan_program app;
     try {
