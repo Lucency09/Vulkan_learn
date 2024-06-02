@@ -30,6 +30,8 @@ namespace toy2d
 		this->createDescriptorPool();
 		this->allocateSets();
 		this->updateSets();
+
+        
 	}
 
     Renderer::~Renderer()

@@ -141,6 +141,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Control\InputHandler.cpp" />
     <ClCompile Include="Render\Vulkan\buffer.cpp" />
     <ClCompile Include="Control\camera.cpp" />
     <ClCompile Include="Render\Vulkan\command_manager.cpp" />
@@ -156,6 +157,7 @@
     <ClCompile Include="Test\FunctionTest\test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Control\include\InputHandler.hpp" />
     <ClInclude Include="Render\Vulkan\include\buffer.hpp" />
     <ClInclude Include="Control\include\camera.hpp" />
     <ClInclude Include="Render\Vulkan\include\command_manager.hpp" />

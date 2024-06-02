@@ -22,4 +22,13 @@ namespace toy2d
 		this->projectionPerspective();
 		return this->mvp;
 	}
+	void Camera::set_M(const glm::mat4& model)
+	{
+		this->mvp.model = model;
+	}
+
+	void Camera::set_M(glm::mat4&& model)
+	{
+		this->mvp.model = model;
+	}
 }

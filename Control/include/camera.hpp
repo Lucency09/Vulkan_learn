@@ -15,6 +15,8 @@ public:
 	Camera();
 	~Camera() = default;
 	MVP get_MVP();
+	void set_M(const glm::mat4& model);
+	void set_M(glm::mat4&& model);
 
 private:
 	MVP mvp = {

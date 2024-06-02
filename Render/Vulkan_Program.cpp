@@ -65,23 +65,26 @@ void Vulkan_program::mainLoop()
 {
     auto& render = toy2d::Context::GetInstance().get_renderer();
     toy2d::Camera camera;
-    render.set_UniformMVP(camera.get_MVP());//设置uniformMVP
+
     while (!glfwWindowShouldClose(this->window))
     {
         glfwPollEvents();
+
+        camera.set_M(glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 0.0f)));
+        render.set_UniformMVP(camera.get_MVP());//设置uniformMVP
 
         render.StartRender();
         render.Draw();//绘制
         render.EndRender();
 
-        render.random_rotation();//随机旋转
-        Sleep(5);//延时
+        //render.random_rotation();//随机旋转
+        //Sleep(5);//延时
 
         // 获取用户输入
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         {
             // 用户按下了ESC键，退出程序
-            glfwSetWindowShouldClose(window, GLFW_TRUE);
+            glfwSetWindowShouldClose(this->window, GLFW_TRUE);
         }
     }
 }

@@ -60,6 +60,9 @@
     <ClCompile Include="Render\Vulkan\texture.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Control\InputHandler.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Render\include\Vulkan_Program.h">
@@ -99,6 +102,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Render\Vulkan\include\texture.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Control\include\InputHandler.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
