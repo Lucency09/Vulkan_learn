@@ -288,7 +288,7 @@ namespace toy2d
             //Sampler
             vk::DescriptorImageInfo imageInfo;
             imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
-                .setImageView(texture->view)
+                .setImageView(this->texture->view)
                 .setSampler(sampler);
             writers[static_cast<int>(UBN::SAMPLER)]
                 .setImageInfo(imageInfo)
@@ -353,9 +353,7 @@ namespace toy2d
         Context::GetInstance().get_commandManager()->FreeCmd(cmdBuf);
     }
 
-
-
-    void Renderer::Draw()
+    void Renderer::StartRender()
     {
         vk::Device& device = Context::GetInstance().get_device();
         toy2d::RenderProcess& renderProcess = Context::GetInstance().get_render_process();
@@ -375,7 +373,7 @@ namespace toy2d
             std::cout << "acquire next image failed!" << std::endl;
         }
 
-        auto imageIndex = result.value;
+        this->imageIndex = result.value;
 
         //更新UniformBuffer
         this->updateUniformData(static_cast<int>(UBN::COLOR));
@@ -383,13 +381,13 @@ namespace toy2d
         //TODO: 更新MVP
         this->updateUniformData(static_cast<int>(UBN::MVP));
         //this->updateSets(static_cast<int>(UBN::MVP));
-        
+
         //开始向commandbuffer中填充命令
         this->cmdBuf_[curFrame_].reset();//重置Buffer
         vk::CommandBufferBeginInfo begininfo;
         begininfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);//设置生命周期为使用一次就重置
         this->cmdBuf_[curFrame_].begin(begininfo);
-        {
+        
             vk::RenderPassBeginInfo renderPassBegin;
             vk::Rect2D area;
             vk::ClearValue clearValue;
@@ -404,7 +402,12 @@ namespace toy2d
                 .setClearValues(clearValue);//设置用什么颜色来清除framebuffer(因为在render_process中setLoadOp(vk::AttachmentLoadOp::eClear))
 
             this->cmdBuf_[curFrame_].beginRenderPass(&renderPassBegin, vk::SubpassContents::eInline);
-            {
+    }
+
+    void Renderer::Draw()
+    {
+        toy2d::RenderProcess& renderProcess = Context::GetInstance().get_render_process();
+            
                 this->cmdBuf_[curFrame_].bindPipeline(vk::PipelineBindPoint::eGraphics, 
                                 renderProcess.get_pipeline());//绑定管线
                 vk::DeviceSize offset = 0;
@@ -431,10 +434,16 @@ namespace toy2d
 
                 //this->cmdBuf_[curFrame_].draw(3, 1, 0, 0); //绘制3个顶点、1个图元，第0个顶点开始绘制，第0个Instance开始
                 this->cmdBuf_[curFrame_].drawIndexed(6, 1, 0, 0, 0);//绘制6个顶点，1个实例，第0个顶点开始绘制，第0个Instance开始
-            }
-            this->cmdBuf_[curFrame_].endRenderPass();
-        }
+            
+            
+    }
+
+    void Renderer::EndRender()
+    {
+        this->cmdBuf_[curFrame_].endRenderPass();
         this->cmdBuf_[curFrame_].end();
+
+        std::unique_ptr<Swapchain>& swapchain = Context::GetInstance().get_swapchain();
 
         //填充graphcisQueue，GPU开始绘制图像
         vk::SubmitInfo submit;

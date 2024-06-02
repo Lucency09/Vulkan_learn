@@ -69,9 +69,20 @@ void Vulkan_program::mainLoop()
     while (!glfwWindowShouldClose(this->window))
     {
         glfwPollEvents();
+
+        render.StartRender();
         render.Draw();//绘制
+        render.EndRender();
+
         render.random_rotation();//随机旋转
         Sleep(5);//延时
+
+        // 获取用户输入
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        {
+            // 用户按下了ESC键，退出程序
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+        }
     }
 }
 

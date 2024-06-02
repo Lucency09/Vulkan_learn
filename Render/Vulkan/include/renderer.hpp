@@ -20,7 +20,9 @@ namespace toy2d {
 		Renderer(std::vector<Vertex> vex, std::vector<std::uint32_t> ind);
 		~Renderer();
 
+		void StartRender();
 		void Draw();
+		void EndRender();
 		
 		void set__Vertices(std::vector<Vertex> vex);
 		void set_Index(std::vector<std::uint32_t> ind);
@@ -31,6 +33,7 @@ namespace toy2d {
 		int maxFlightCount_ = 2;//双缓冲
 		int curFrame_ = 0;//当前帧
 		int uniformCount_ = 2;//uniform变量计数
+		uint32_t imageIndex = 0;
 
 		std::vector<Vertex> vertices = {
 			//     顶点坐标，          颜色

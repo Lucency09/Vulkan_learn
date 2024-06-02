@@ -9,9 +9,9 @@ layout(push_constant) uniform Transform {
 } transform;
 
 layout(binding = 0) uniform MVP {
-    mat4 model;
-    mat4 view;
-    mat4 projection;
+    mat4 model;//坐标变换
+    mat4 view;//观察变换
+    mat4 projection;//投影变换
 } mvp;
 
 layout (location = 0) out vec4 moutColor;
