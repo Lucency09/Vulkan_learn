@@ -70,7 +70,7 @@ void Vulkan_program::mainLoop()
     {
         glfwPollEvents();
 
-        camera.set_M(glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 0.0f)));
+        camera.set_M(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)));
         render.set_UniformMVP(camera.get_MVP());//…Ë÷√uniformMVP
 
         render.StartRender();

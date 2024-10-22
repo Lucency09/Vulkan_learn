@@ -11,7 +11,7 @@ namespace toy2d
     Renderer::Renderer(std::vector<Vertex> vex, std::vector<std::uint32_t> ind)
         : vertices(std::move(vex)), indices(std::move(ind))
     {   
-        this->init();
+        //this->init();
     }
 
     void Renderer::init()
@@ -24,7 +24,7 @@ namespace toy2d
 
 		this->updateBuffer();
 
-        this->createTexture("res/Tex_img/role.png");
+        this->createTexture(this->TexturePath);
         this->createSampler();
 
 		this->createDescriptorPool();

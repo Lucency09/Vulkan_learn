@@ -28,12 +28,14 @@ namespace toy2d {
 		void set_Index(std::vector<std::uint32_t> ind);
 		void random_rotation();//生成随机旋转的UniformTrans矩阵
 		void set_UniformMVP(const MVP& mvp);
+		void init();//初始化Vulkan
 
 	private:
 		int maxFlightCount_ = 2;//双缓冲
 		int curFrame_ = 0;//当前帧
 		int uniformCount_ = 2;//uniform变量计数
 		uint32_t imageIndex = 0;
+		std::string TexturePath = "res/Tex_img/maruxer.png";//纹理路径
 
 		std::vector<Vertex> vertices = {
 			//     顶点坐标，          颜色
@@ -42,7 +44,6 @@ namespace toy2d {
 			Vertex{{0.5, 0.5, 0}, {0.0, 0.0, 1.0},{},{1, 1}},
 			Vertex{{0.5, -0.5, 0}, {1.0, 1.0, 1.0},{},{1, 0}},
 			//TODO: 立方体坐标
-
 		};//顶点坐标
 
 		std::vector<std::uint32_t> indices {
@@ -61,7 +62,7 @@ namespace toy2d {
 		std::vector<size_t> UniformMemorySize = { sizeof(this->mvp), sizeof(this->UniformColor) };//uniform变量长度(必须按照binding值进行排序)
 		
 		
-		void init();//初始化Vulkan
+		
 		vk::CommandPool cmdPool_;//已弃用
 		std::vector<vk::CommandBuffer> cmdBuf_;//用于存储命令缓冲
 		std::vector<vk::Semaphore> imageAvaliable_;//控制绘制命令提交的信号
