@@ -4,3 +4,9 @@
 toy2d::InputHandler::~InputHandler()
 {
 }
+
+
+void toy2d::InputHandler::Update()
+{
+
+}

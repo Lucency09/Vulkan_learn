@@ -224,6 +224,7 @@ namespace toy2d
 	void Context::InitRenderer()
 	{
 		renderer.reset(new Renderer);
+		renderer->init();
 	}
 
 	void Context::getQueues()
