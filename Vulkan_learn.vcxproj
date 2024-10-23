@@ -146,6 +146,7 @@
     <ClCompile Include="Control\camera.cpp" />
     <ClCompile Include="Render\Vulkan\command_manager.cpp" />
     <ClCompile Include="Render\Vulkan\context.cpp" />
+    <ClCompile Include="Render\Vulkan\cumpute.cpp" />
     <ClCompile Include="Render\Vulkan\texture.cpp" />
     <ClCompile Include="Test\FunctionTest\main.cpp" />
     <ClCompile Include="Render\Common\math.cpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="Control\include\camera.hpp" />
     <ClInclude Include="Render\Vulkan\include\command_manager.hpp" />
     <ClInclude Include="Render\Vulkan\include\context.hpp" />
+    <ClInclude Include="Render\Vulkan\include\cumpute.hpp" />
     <ClInclude Include="Render\Vulkan\include\renderer.hpp" />
     <ClInclude Include="Render\Vulkan\include\render_process.hpp" />
     <ClInclude Include="Render\Vulkan\include\shader.hpp" />
@@ -173,6 +175,7 @@
     <ClInclude Include="Render\Vulkan\include\texture.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="res\Shader\dxt_encode.glsl" />
     <None Include="res\Shader\Fragment.shader" />
     <None Include="res\Shader\Vertex01.shader" />
   </ItemGroup>

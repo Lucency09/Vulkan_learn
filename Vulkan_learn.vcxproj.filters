@@ -63,6 +63,9 @@
     <ClCompile Include="Control\InputHandler.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Render\Vulkan\cumpute.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Render\include\Vulkan_Program.h">
@@ -107,9 +110,13 @@
     <ClInclude Include="Control\include\InputHandler.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Render\Vulkan\include\cumpute.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\Shader\Vertex01.shader" />
     <None Include="res\Shader\Fragment.shader" />
+    <None Include="res\Shader\dxt_encode.glsl" />
   </ItemGroup>
 </Project>
