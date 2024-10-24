@@ -175,7 +175,7 @@
     <ClInclude Include="Render\Vulkan\include\texture.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\Shader\dxt_encode.glsl" />
+    <None Include="res\Shader\dxt_encode.comp" />
     <None Include="res\Shader\Fragment.shader" />
     <None Include="res\Shader\Vertex01.shader" />
   </ItemGroup>

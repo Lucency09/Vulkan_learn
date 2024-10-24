@@ -93,15 +93,20 @@ namespace toy2d
     {
         std::string end_str = "";
         std::string par = "";
-        if (file_type == "vertext")
+        if (file_type == "vert")
         {
             end_str = ".vert";
             par = "-V";
         }
-        else if (file_type == "fragment")
+        else if (file_type == "frag")
         {
             end_str = ".frag";
-            par = "-S frag -V";
+            par = "-V";
+        }
+        else if (file_type == "comp")
+        {
+            end_str = ".comp";
+            par = "-V";
         }
         
         // 获取输入目录下的所有.shader文件
@@ -134,8 +139,9 @@ namespace toy2d
     inline void comile_shader(const std::string& input_dir, const std::string& output_dir)
     {
         std::cout << "开始编译shader" << std::endl;
-        compile_glsl("vertext", "glslangValidator", input_dir, output_dir);
-        compile_glsl("fragment", "glslangValidator", input_dir, output_dir);
+        compile_glsl("vert", "glslangValidator", input_dir, output_dir);
+        compile_glsl("frag", "glslangValidator", input_dir, output_dir);
+        compile_glsl("comp", "glslangValidator", input_dir, output_dir);
         std::cout << "结束编译shader" << std::endl;
     }
 }

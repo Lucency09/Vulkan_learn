@@ -16,12 +16,16 @@ namespace toy2d {
 		vk::PhysicalDevice physicalDevice;
 		vk::Device device;
 		vk::Queue queue;
+		vk::DescriptorSetLayout descriptorSetLayout;
 		vk::ShaderModule shadermodule;
 		vk::PipelineLayout piplinelayout;
 		vk::Pipeline pipeline;
 		std::string shadersource;
 
 		vk::ShaderModule createShaderModule(vk::Device device, const std::string& shadersource);
+		vk::PipelineLayout createpiplinelayout();
+		vk::Pipeline createCumputePipline();
+		vk::DescriptorSetLayout createdescriptorSetLayout();
 
 		//void init();
 	};

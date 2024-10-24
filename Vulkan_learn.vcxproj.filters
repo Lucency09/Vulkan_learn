@@ -117,6 +117,6 @@
   <ItemGroup>
     <None Include="res\Shader\Vertex01.shader" />
     <None Include="res\Shader\Fragment.shader" />
-    <None Include="res\Shader\dxt_encode.glsl" />
+    <None Include="res\Shader\dxt_encode.comp" />
   </ItemGroup>
 </Project>
