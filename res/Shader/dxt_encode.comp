@@ -1,9 +1,8 @@
 #version 450
 
 layout(binding = 0, rgba8) uniform image2D inputImage;
-layout(binding = 1) buffer OutputBuffer {
-	vec4 data[];
-}outputBuffer;
+//layout(binding = 1) uniform utexture2D outputImage;
+layout(binding = 1, rgba16ui) uniform uimage2D outputImage;
 
 layout(local_size_x = 16, local_size_y = 16)in;
 
@@ -11,5 +10,7 @@ void main()
 {
 	ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
 	vec4 color = imageLoad(inputImage, coords);
-	outputBuffer.data[coords.y * gl_NumWorkGroups.x * 16 + coords.x] = color;
+	uvec4 ucolor = uvec4(color 
+	);
+	imageStore(outputImage, coords, ucolor);
 }

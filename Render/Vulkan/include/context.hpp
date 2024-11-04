@@ -10,6 +10,7 @@
 #include "Render/Vulkan/include/render_process.hpp"
 #include "Render/Vulkan/include/renderer.hpp"
 #include "Render/Vulkan/include/command_manager.hpp"
+#include "Render/Vulkan/include/cumpute.hpp"
 
 
 #ifndef CONTEXT

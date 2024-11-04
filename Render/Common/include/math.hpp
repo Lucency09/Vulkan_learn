@@ -20,6 +20,9 @@ namespace toy2d {
     constexpr int WINDOWS_WIDTH = 1920;
     constexpr int WINDOWS_HIGHT = 1080;
     
+    //全局
+    inline bool DXT_ENCODE_FLAG = false;
+
     //Uniform变量binding表
     enum class UBN : uint32_t //Uniform Binding Name
     {

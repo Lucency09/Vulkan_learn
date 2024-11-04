@@ -15,24 +15,27 @@ namespace toy2d {
             throw std::runtime_error("image load failed");
         }
 
-        std::unique_ptr<Buffer> buffer(new Buffer(size,
+        //rbga8纹理缓冲
+        std::unique_ptr<Buffer> rbg_buffer(new Buffer(size,
             vk::BufferUsageFlagBits::eTransferSrc,
             vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible));
-        void* ptr = Context::GetInstance().get_device().mapMemory(buffer->memory, 0, buffer->size);//映射内存
+        void* ptr = Context::GetInstance().get_device().mapMemory(rbg_buffer->memory, 0, rbg_buffer->size);//映射内存
         memcpy(ptr, pixels, size);//拷贝数据
-        Context::GetInstance().get_device().unmapMemory(buffer->memory);//解除映射
+        stbi_image_free(pixels);
+        Context::GetInstance().get_device().unmapMemory(rbg_buffer->memory);//解除映射
+
+        //纹理压缩
+        std::unique_ptr<Cumpute> dxt_encode = std::make_unique<Cumpute>("res/Spir-v/dxt_encode.spv");
 
         createImage(w, h);
         allocMemory();
-        Context::GetInstance().get_device().bindImageMemory(image, memory, 0);//绑定内存,对应bindBufferMemory
+        Context::GetInstance().get_device().bindImageMemory(this->image, this->memory, 0);//绑定内存,对应bindBufferMemory
 
         transitionImageLayoutFromUndefine2Dst();//第一次转换布局，从未定义到传输目标，使能传输
-        transformData2Image(*buffer, w, h);//将数据传输到图像
+        transformData2Image(*rbg_buffer, w, h);//将数据传输到图像
         transitionImageLayoutFromDst2Optimal();//第二次转换布局，从传输目标到着色器只读，使能着色器读取
 
         createImageView();
-
-        stbi_image_free(pixels);
     }
 
     Texture::~Texture() {

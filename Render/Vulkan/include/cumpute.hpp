@@ -1,7 +1,11 @@
 #pragma once
 
-#include "vulkan/vulkan.hpp"
 
+#include "vulkan/vulkan.hpp"
+#include "Render/Vulkan/include/buffer.hpp"
+
+#ifndef CUMPUTE 
+#define CUMPUTE
 namespace toy2d {
 	class Cumpute final {
 	public:
@@ -9,7 +13,7 @@ namespace toy2d {
 		Cumpute(const std::string& shaderpath);
 		~Cumpute() = default;
 
-		//void set_
+		void bindBuffer(const Buffer& inputbuffer, const Buffer& outputbuffer);
 
 	private:
 		vk::Instance instance;
@@ -31,3 +35,4 @@ namespace toy2d {
 	};
 
 }
+#endif // !CUMPUTE
