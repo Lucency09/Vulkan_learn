@@ -24,15 +24,21 @@ namespace toy2d {
         stbi_image_free(pixels);
         Context::GetInstance().get_device().unmapMemory(rbg_buffer->memory);//解除映射
 
+        //dxt纹理缓冲
+        std::unique_ptr<Buffer> dxt_buffer(new Buffer(size,
+            vk::BufferUsageFlagBits::eTransferSrc,
+            vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible));
+
         //纹理压缩
         std::unique_ptr<Cumpute> dxt_encode = std::make_unique<Cumpute>("res/Spir-v/dxt_encode.spv");
+        //dxt_encode->bindBuffer(*rbg_buffer, *dxt_buffer);
 
         createImage(w, h);
         allocMemory();
         Context::GetInstance().get_device().bindImageMemory(this->image, this->memory, 0);//绑定内存,对应bindBufferMemory
 
         transitionImageLayoutFromUndefine2Dst();//第一次转换布局，从未定义到传输目标，使能传输
-        transformData2Image(*rbg_buffer, w, h);//将数据传输到图像
+        transformData2Image(*dxt_buffer, w, h);//将数据传输到图像
         transitionImageLayoutFromDst2Optimal();//第二次转换布局，从传输目标到着色器只读，使能着色器读取
 
         createImageView();
@@ -70,7 +76,7 @@ namespace toy2d {
         auto index = Context::GetInstance().QueryBufferMemTypeIndex(requirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
         allocInfo.setMemoryTypeIndex(index);
 
-        memory = device.allocateMemory(allocInfo);
+        this->memory = device.allocateMemory(allocInfo);
     }
 
     void Texture::transformData2Image(Buffer& buffer, uint32_t w, uint32_t h) {

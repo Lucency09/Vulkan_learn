@@ -13,7 +13,7 @@ namespace toy2d {
 		Cumpute(const std::string& shaderpath);
 		~Cumpute() = default;
 
-		void bindBuffer(const Buffer& inputbuffer, const Buffer& outputbuffer);
+		void run_comput(const Buffer& inputbuffer, const Buffer& outputbuffer);
 
 	private:
 		vk::Instance instance;
@@ -24,14 +24,17 @@ namespace toy2d {
 		vk::ShaderModule shadermodule;
 		vk::PipelineLayout piplinelayout;
 		vk::Pipeline pipeline;
+		vk::CommandPool commandPool;
 		std::string shadersource;
 
 		vk::ShaderModule createShaderModule(vk::Device device, const std::string& shadersource);
 		vk::PipelineLayout createpiplinelayout();
 		vk::Pipeline createCumputePipline();
 		vk::DescriptorSetLayout createdescriptorSetLayout();
+		vk::CommandPool createCommandPool();
 
 		//void init();
+		
 	};
 
 }
