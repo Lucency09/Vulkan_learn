@@ -7,6 +7,7 @@
 #include "Render/Common/include/uniform.hpp"
 #include "Render/Vulkan/include/buffer.hpp"
 #include "Render/Vulkan/include/texture.hpp"
+#include "Render/Vulkan/include/cumpute.hpp"
 
 
 #ifndef RENDERER

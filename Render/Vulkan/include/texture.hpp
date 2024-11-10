@@ -14,6 +14,7 @@ namespace toy2d {
     class Texture final {
     public:
         Texture(std::string_view filename);
+        Texture(int w, int h, int len);
         ~Texture();
 
         vk::Image image;
@@ -21,8 +22,8 @@ namespace toy2d {
         vk::ImageView view;
 
     private:
-        void createImage(uint32_t w, uint32_t h);
-        void createImageView();
+        void createImage(uint32_t w, uint32_t h, vk::Format format);
+        void createImageView(vk::Format format);
         void allocMemory();
         uint32_t queryImageMemoryIndex();
 

@@ -289,7 +289,7 @@ namespace toy2d
 
             //Sampler
             vk::DescriptorImageInfo imageInfo;
-            imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+            imageInfo.setImageLayout(vk::ImageLayout::eGeneral)
                 .setImageView(this->texture->view)
                 .setSampler(sampler);
             writers[static_cast<int>(UBN::SAMPLER)]
@@ -311,8 +311,10 @@ namespace toy2d
         //Context::GetInstance().get_phyDevice().getProperties().limits.maxSamplerAnisotropy;//获取硬件支持最大各向异性过滤值
         vk::SamplerCreateInfo createInfo;
         createInfo
-            .setMagFilter(vk::Filter::eLinear)//设置放大后采样方式，这里是就临近点直接取样
-            .setMinFilter(vk::Filter::eLinear)//设置缩小后采样方式，这里是就临近点直接取样
+            .setMagFilter(vk::Filter::eNearest)//放大时使用最近点采样,适配无符号整形纹理
+            .setMinFilter(vk::Filter::eNearest)//缩小时使用最近点采样
+            //.setMagFilter(vk::Filter::eLinear)//设置放大后采样方式，这里是就临近点直接取样
+            //.setMinFilter(vk::Filter::eLinear)//设置缩小后采样方式，这里是就临近点直接取样
             .setAddressModeU(vk::SamplerAddressMode::eRepeat)//设置U轴的寻址模式，如果采样坐标超出纹理区域，这里是重复
             .setAddressModeV(vk::SamplerAddressMode::eRepeat)
             .setAddressModeW(vk::SamplerAddressMode::eRepeat)
@@ -322,13 +324,20 @@ namespace toy2d
             .setUnnormalizedCoordinates(false)//是否使用非归一化坐标，这里是不使用
             .setCompareEnable(false)//是否启用颜色比较，这里是不启用
             //.setCompareOp(vk::CompareOp::eAlways)//设置颜色比较的方式，这里是总是通过
-            .setMipmapMode(vk::SamplerMipmapMode::eLinear);//设置mipmap采样方式，这里是线性插值
+            //.setMipmapMode(vk::SamplerMipmapMode::eLinear);//设置mipmap采样方式，这里是线性插值
+            .setMipmapMode(vk::SamplerMipmapMode::eNearest); //设置mipmap采样方式,这里是就近
         this->sampler = Context::GetInstance().get_device().createSampler(createInfo);
     }
 
     void Renderer::createTexture(std::string TexPath)
     {
-        this->texture.reset(new Texture(TexPath));
+        std::unique_ptr<toy2d::Texture> rgb_tex = std::make_unique<toy2d::Texture>(TexPath);
+        std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>(592, 593, 8);
+
+        toy2d::Cumpute cumpute("res/Spir-v/dxt_encode.spv");
+        cumpute.run_comput(*rgb_tex, *dxt_tex);
+
+        this->texture = std::move(dxt_tex);
     }
 
     void Renderer::copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset)
@@ -410,32 +419,32 @@ namespace toy2d
     {
         toy2d::RenderProcess& renderProcess = Context::GetInstance().get_render_process();
             
-                this->cmdBuf_[curFrame_].bindPipeline(vk::PipelineBindPoint::eGraphics, 
-                                renderProcess.get_pipeline());//绑定管线
-                vk::DeviceSize offset = 0;
+        this->cmdBuf_[curFrame_].bindPipeline(vk::PipelineBindPoint::eGraphics, 
+                        renderProcess.get_pipeline());//绑定管线
+        vk::DeviceSize offset = 0;
                 
-                this->cmdBuf_[curFrame_].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, 
-                                Context::GetInstance().get_render_process().get_layout(), 
-                                0,//这个参数是指定在layout中的第几个set，同时是shader程序中的set=?，这里是0
-                                this->sets_[curFrame_],
-                                {});
+        this->cmdBuf_[curFrame_].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, 
+                        Context::GetInstance().get_render_process().get_layout(), 
+                        0,//这个参数是指定在layout中的第几个set，同时是shader程序中的set=?，这里是0
+                        this->sets_[curFrame_],
+                        {});
                 
-                this->cmdBuf_[curFrame_].bindVertexBuffers(0, 
-                                deviceVertexBuffer_->buffer, 
-                                offset);//将deviceVertexBuffer_的数据传入，第一个参数指代存在多个buffer时使用第几个
+        this->cmdBuf_[curFrame_].bindVertexBuffers(0, 
+                        deviceVertexBuffer_->buffer, 
+                        offset);//将deviceVertexBuffer_的数据传入，第一个参数指代存在多个buffer时使用第几个
 
-                this->cmdBuf_[curFrame_].bindIndexBuffer(this->deviceIndicesBuffer_->buffer, 
-                                0, 
-                                vk::IndexType::eUint32);
+        this->cmdBuf_[curFrame_].bindIndexBuffer(this->deviceIndicesBuffer_->buffer, 
+                        0, 
+                        vk::IndexType::eUint32);
 
-                this->cmdBuf_[curFrame_].pushConstants(Context::GetInstance().get_render_process().get_layout(),
-                                vk::ShaderStageFlagBits::eVertex,
-                                0,
-                                sizeof(UniformTrans),
-                                &UniformTrans);//将UniformTrans的数据传入
+        this->cmdBuf_[curFrame_].pushConstants(Context::GetInstance().get_render_process().get_layout(),
+                        vk::ShaderStageFlagBits::eVertex,
+                        0,
+                        sizeof(UniformTrans),
+                        &UniformTrans);//将UniformTrans的数据传入
 
-                //this->cmdBuf_[curFrame_].draw(3, 1, 0, 0); //绘制3个顶点、1个图元，第0个顶点开始绘制，第0个Instance开始
-                this->cmdBuf_[curFrame_].drawIndexed(6, 1, 0, 0, 0);//绘制6个顶点，1个实例，第0个顶点开始绘制，第0个Instance开始
+        //this->cmdBuf_[curFrame_].draw(3, 1, 0, 0); //绘制3个顶点、1个图元，第0个顶点开始绘制，第0个Instance开始
+        this->cmdBuf_[curFrame_].drawIndexed(6, 1, 0, 0, 0);//绘制6个顶点，1个实例，第0个顶点开始绘制，第0个Instance开始
             
             
     }

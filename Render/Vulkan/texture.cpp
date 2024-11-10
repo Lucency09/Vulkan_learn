@@ -24,16 +24,28 @@ namespace toy2d {
         stbi_image_free(pixels);
         Context::GetInstance().get_device().unmapMemory(rbg_buffer->memory);//解除映射
 
+        createImage(w, h, vk::Format::eR8G8B8A8Unorm);
+        allocMemory();
+        Context::GetInstance().get_device().bindImageMemory(this->image, this->memory, 0);//绑定内存,对应bindBufferMemory
+
+        transitionImageLayoutFromUndefine2Dst();//第一次转换布局，从未定义到传输目标，使能传输
+        transformData2Image(*rbg_buffer, w, h);//将数据传输到图像
+        transitionImageLayoutFromDst2Optimal();//第二次转换布局，从传输目标到着色器只读，使能着色器读取
+
+        createImageView(vk::Format::eR8G8B8A8Unorm);
+    }
+
+    Texture::Texture(int w, int h, int len)
+    {
+        size_t size = w * h * len;
+
         //dxt纹理缓冲
         std::unique_ptr<Buffer> dxt_buffer(new Buffer(size,
             vk::BufferUsageFlagBits::eTransferSrc,
             vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible));
 
-        //纹理压缩
-        std::unique_ptr<Cumpute> dxt_encode = std::make_unique<Cumpute>("res/Spir-v/dxt_encode.spv");
-        //dxt_encode->bindBuffer(*rbg_buffer, *dxt_buffer);
 
-        createImage(w, h);
+        createImage(w, h, vk::Format::eR16G16B16A16Uint);
         allocMemory();
         Context::GetInstance().get_device().bindImageMemory(this->image, this->memory, 0);//绑定内存,对应bindBufferMemory
 
@@ -41,7 +53,7 @@ namespace toy2d {
         transformData2Image(*dxt_buffer, w, h);//将数据传输到图像
         transitionImageLayoutFromDst2Optimal();//第二次转换布局，从传输目标到着色器只读，使能着色器读取
 
-        createImageView();
+        createImageView(vk::Format::eR16G16B16A16Uint);
     }
 
     Texture::~Texture() {
@@ -51,17 +63,18 @@ namespace toy2d {
         device.destroyImage(this->image);
     }
 
-    void Texture::createImage(uint32_t w, uint32_t h) {
+    void Texture::createImage(uint32_t w, uint32_t h, vk::Format format) {
         vk::ImageCreateInfo createInfo;
         createInfo.setImageType(vk::ImageType::e2D)
             .setArrayLayers(1)
             .setMipLevels(1)
             .setExtent({ w, h, 1 })
-            .setFormat(vk::Format::eR8G8B8A8Srgb)
+            .setFormat(format)
             .setTiling(vk::ImageTiling::eOptimal)//指定为最优化内存布局
             .setInitialLayout(vk::ImageLayout::eUndefined)
-            //                   用于传输数据到图像           用于着色器读取(与shader中Sampler关键字对应)
-            .setUsage(vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled)
+            //                                              用于传输数据到图像           用于着色器读取(与shader中Sampler关键字对应)
+            .setUsage(vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled)
+            //.setUsage(vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled)
             .setSamples(vk::SampleCountFlagBits::e1);//采样数(这里设置为对本身采样)
         this->image = Context::GetInstance().get_device().createImage(createInfo);
     }
@@ -134,7 +147,7 @@ namespace toy2d {
                     .setAspectMask(vk::ImageAspectFlagBits::eColor);
                 barrier.setImage(this->image)
                     .setOldLayout(vk::ImageLayout::eTransferDstOptimal)
-                    .setNewLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+                    .setNewLayout(vk::ImageLayout::eGeneral)
                     .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
                     .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
                     .setSrcAccessMask((vk::AccessFlagBits::eTransferWrite))
@@ -145,7 +158,7 @@ namespace toy2d {
             });
     }
 
-    void Texture::createImageView() {
+    void Texture::createImageView(vk::Format format) {
         vk::ImageViewCreateInfo createInfo;
         vk::ComponentMapping mapping;
         vk::ImageSubresourceRange range;
@@ -157,7 +170,7 @@ namespace toy2d {
         createInfo.setImage(image)
             .setViewType(vk::ImageViewType::e2D)
             .setComponents(mapping)
-            .setFormat(vk::Format::eR8G8B8A8Srgb)
+            .setFormat(format)
             .setSubresourceRange(range);
         view = Context::GetInstance().get_device().createImageView(createInfo);
     }

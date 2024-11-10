@@ -25,20 +25,21 @@ toy2d::Cumpute::Cumpute(const std::string& shaderpath)
     this->commandPool = this->createCommandPool();
 }
 
-void toy2d::Cumpute::run_comput(const Buffer& inputbuffer, const Buffer& outputbuffer)
+
+void toy2d::Cumpute::run_comput(const Texture& inputtexture, Texture& outputtexture)
 {
     // 创建图像
-    vk::Extent3D extent(WINDOWS_WIDTH, WINDOWS_HIGHT, 1);
-    vk::Image inputImage = createImage(this->device, extent, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eTransferDst);
-    vk::Image outputImage = createImage(this->device, extent, vk::Format::eR8G8B8A8Uint, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eTransferDst);
+    //vk::Extent3D extent(WINDOWS_WIDTH, WINDOWS_HIGHT, 1);
+    //vk::Image inputImage = createImage(this->device, extent, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eTransferDst);
+    //vk::Image outputImage = createImage(this->device, extent, vk::Format::eR8G8B8A8Uint, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eTransferDst);
 
     // 创建图像视图
-    vk::ImageView inputImageView = createImageView(this->device, inputImage, vk::Format::eR8G8B8A8Unorm);
-    vk::ImageView outputImageView = createImageView(this->device, outputImage, vk::Format::eR8G8B8A8Uint);
+    //vk::ImageView inputImageView = createImageView(this->device, inputImage, vk::Format::eR8G8B8A8Unorm);
+    //vk::ImageView outputImageView = createImageView(this->device, outputImage, vk::Format::eR8G8B8A8Uint);
 
     // 将缓冲区数据复制到图像
-    copyBufferToImage(this->device, this->commandPool, this->queue, inputbuffer.buffer, inputImage, WINDOWS_WIDTH, WINDOWS_HIGHT);
-    copyBufferToImage(this->device, this->commandPool, this->queue, outputbuffer.buffer, outputImage, WINDOWS_WIDTH, WINDOWS_HIGHT);
+    //copyBufferToImage(this->device, this->commandPool, this->queue, inputbuffer.buffer, inputImage, WINDOWS_WIDTH, WINDOWS_HIGHT);
+    //copyBufferToImage(this->device, this->commandPool, this->queue, outputbuffer.buffer, outputImage, WINDOWS_WIDTH, WINDOWS_HIGHT);
 
     // 创建描述符池
     std::array<vk::DescriptorPoolSize, 1> poolSizes = {
@@ -52,8 +53,8 @@ void toy2d::Cumpute::run_comput(const Buffer& inputbuffer, const Buffer& outputb
     vk::DescriptorSet descriptorSet = this->device.allocateDescriptorSets(allocInfo).front();
 
     // 更新描述符集
-    vk::DescriptorImageInfo inputImageInfo({}, inputImageView, vk::ImageLayout::eGeneral);
-    vk::DescriptorImageInfo outputImageInfo({}, outputImageView, vk::ImageLayout::eGeneral);
+    vk::DescriptorImageInfo inputImageInfo({}, inputtexture.view, vk::ImageLayout::eGeneral);
+    vk::DescriptorImageInfo outputImageInfo({}, outputtexture.view, vk::ImageLayout::eGeneral);
 
     std::array<vk::WriteDescriptorSet, 2> descriptorWrites = {
         vk::WriteDescriptorSet(
@@ -88,7 +89,8 @@ void toy2d::Cumpute::run_comput(const Buffer& inputbuffer, const Buffer& outputb
     commandBuffer.begin(beginInfo);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, this->pipeline);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, this->piplinelayout, 0, descriptorSet, nullptr);
+    //commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, this->piplinelayout, 0, descriptorSet, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, this->piplinelayout, 0, 1, &descriptorSet, 0, nullptr);
 
     // 调用计算着色器
     commandBuffer.dispatch((uint32_t)ceil(WINDOWS_WIDTH / float(16)), (uint32_t)ceil(WINDOWS_HIGHT / float(16)), 1);
@@ -101,12 +103,13 @@ void toy2d::Cumpute::run_comput(const Buffer& inputbuffer, const Buffer& outputb
     this->queue.waitIdle();
 
     // 清理资源
-    this->device.freeCommandBuffers(this->commandPool, commandBuffer);
-    this->device.destroyDescriptorPool(descriptorPool);
-    this->device.destroyImageView(inputImageView);
-    this->device.destroyImageView(outputImageView);
-    this->device.destroyImage(inputImage);
-    this->device.destroyImage(outputImage);
+    //this->device.freeCommandBuffers(this->commandPool, commandBuffer);
+    //this->device.destroyDescriptorPool(descriptorPool);
+    //this->device.destroyImageView(inputImageView);
+    //this->device.destroyImageView(outputImageView);
+    //this->device.destroyImage(inputImage);
+    //this->device.destroyImage(outputImage);
+
 }
 
 vk::ShaderModule toy2d::Cumpute::createShaderModule(vk::Device device, const std::string& shadersource)

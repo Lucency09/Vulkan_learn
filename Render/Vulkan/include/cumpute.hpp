@@ -2,7 +2,7 @@
 
 
 #include "vulkan/vulkan.hpp"
-#include "Render/Vulkan/include/buffer.hpp"
+#include "Render/Vulkan/include/texture.hpp"
 
 #ifndef CUMPUTE 
 #define CUMPUTE
@@ -13,7 +13,7 @@ namespace toy2d {
 		Cumpute(const std::string& shaderpath);
 		~Cumpute() = default;
 
-		void run_comput(const Buffer& inputbuffer, const Buffer& outputbuffer);
+		void run_comput(const Texture& inputtexture, Texture& outputtexture);
 
 	private:
 		vk::Instance instance;
