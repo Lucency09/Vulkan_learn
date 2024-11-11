@@ -2,8 +2,10 @@
 
 layout(binding = 0, rgba8) uniform image2D inputImage;
 
-layout(binding = 1, rgba8ui) uniform uimage2D outputImage;
-//layout(binding = 1, rgba16ui) uniform uimage2D outputImage;
+//layout(binding = 1, rgba8ui) uniform uimage2D outputImage;
+layout(binding = 1) buffer OutputBuffer {
+	vec4 data[];
+}outputbuffer;
 
 layout(local_size_x = 16, local_size_y = 16)in;
 
@@ -11,7 +13,11 @@ void main()
 {
 	ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
 	vec4 color = imageLoad(inputImage, coords);
-	uvec4 ucolor = uvec4(color 
-	);
-	imageStore(outputImage, coords, ucolor);
+	uvec4 ucolor = uvec4(color);
+
+	// 获取图像的宽度和高度
+    ivec2 imageSize = imageSize(inputImage);
+    int index = coords.y * imageSize.x + coords.x; // 计算输出缓冲区的索引
+    outputbuffer.data[index] = color; // 将颜色数据写入输出缓冲区
+	//imageStore(outputImage, coords, ucolor);
 }

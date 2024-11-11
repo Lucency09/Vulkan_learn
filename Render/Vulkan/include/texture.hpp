@@ -14,7 +14,7 @@ namespace toy2d {
     class Texture final {
     public:
         Texture(std::string_view filename);
-        Texture(int w, int h, int len);
+        Texture(int w, int h, int len, Buffer& buffer);
         ~Texture();
 
         vk::Image image;

@@ -35,25 +35,19 @@ namespace toy2d {
         createImageView(vk::Format::eR8G8B8A8Unorm);
     }
 
-    Texture::Texture(int w, int h, int len)
+    Texture::Texture(int w, int h, int len, Buffer& buffer)
     {
         size_t size = w * h * len;
 
-        //dxt纹理缓冲
-        std::unique_ptr<Buffer> dxt_buffer(new Buffer(size,
-            vk::BufferUsageFlagBits::eTransferSrc,
-            vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible));
-
-
-        createImage(w, h, vk::Format::eR16G16B16A16Uint);
+        createImage(w, h, vk::Format::eR8G8B8A8Unorm);
         allocMemory();
         Context::GetInstance().get_device().bindImageMemory(this->image, this->memory, 0);//绑定内存,对应bindBufferMemory
 
         transitionImageLayoutFromUndefine2Dst();//第一次转换布局，从未定义到传输目标，使能传输
-        transformData2Image(*dxt_buffer, w, h);//将数据传输到图像
+        transformData2Image(buffer, w, h);//将数据传输到图像
         transitionImageLayoutFromDst2Optimal();//第二次转换布局，从传输目标到着色器只读，使能着色器读取
 
-        createImageView(vk::Format::eR16G16B16A16Uint);
+        createImageView(vk::Format::eR8G8B8A8Unorm);
     }
 
     Texture::~Texture() {
