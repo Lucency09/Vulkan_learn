@@ -26,13 +26,14 @@ toy2d::Cumpute::Cumpute(const std::string& shaderpath)
 }
 
 
-void toy2d::Cumpute::run_comput(const Texture& inputtexture, Texture& outputtexture)
+void toy2d::Cumpute::run_comput(const Texture& inputtexture, Buffer& outputbuffer)
 {
     // 创建描述符池
-    std::array<vk::DescriptorPoolSize, 1> poolSizes = {
-        vk::DescriptorPoolSize(vk::DescriptorType::eStorageImage, 2)
+    std::array<vk::DescriptorPoolSize, 2> poolSizes = {
+        vk::DescriptorPoolSize(vk::DescriptorType::eStorageImage, 1),
+        vk::DescriptorPoolSize(vk::DescriptorType::eStorageBuffer, 1)
     };
-    vk::DescriptorPoolCreateInfo poolInfo({}, 1, poolSizes.size(), poolSizes.data());
+    vk::DescriptorPoolCreateInfo poolInfo({}, 2, poolSizes.size(), poolSizes.data());
     vk::DescriptorPool descriptorPool = this->device.createDescriptorPool(poolInfo);
 
     // 分配描述符集
@@ -41,7 +42,7 @@ void toy2d::Cumpute::run_comput(const Texture& inputtexture, Texture& outputtext
 
     // 更新描述符集
     vk::DescriptorImageInfo inputImageInfo({}, inputtexture.view, vk::ImageLayout::eGeneral);
-    vk::DescriptorImageInfo outputImageInfo({}, outputtexture.view, vk::ImageLayout::eGeneral);
+    vk::DescriptorBufferInfo outputBufferInfo(outputbuffer.buffer, 0, VK_WHOLE_SIZE);
 
     std::array<vk::WriteDescriptorSet, 2> descriptorWrites = {
         vk::WriteDescriptorSet(
@@ -59,9 +60,9 @@ void toy2d::Cumpute::run_comput(const Texture& inputtexture, Texture& outputtext
             1, // dstBinding
             0, // dstArrayElement
             1, // descriptorCount
-            vk::DescriptorType::eStorageImage, // descriptorType
-            &outputImageInfo, // pImageInfo
-            nullptr, // pBufferInfo
+            vk::DescriptorType::eStorageBuffer, // descriptorType
+            nullptr, // pImageInfo
+            &outputBufferInfo, // pBufferInfo
             nullptr // pTexelBufferView
         )
     };
@@ -89,9 +90,9 @@ void toy2d::Cumpute::run_comput(const Texture& inputtexture, Texture& outputtext
     this->queue.submit(submitInfo, nullptr);
     this->queue.waitIdle();
 
-    // 清理资源
-    //this->device.freeCommandBuffers(this->commandPool, commandBuffer);
-    //this->device.destroyDescriptorPool(descriptorPool);
+
+    this->device.freeCommandBuffers(this->commandPool, commandBuffer);
+    this->device.destroyDescriptorPool(descriptorPool);
     //this->device.destroyImageView(inputImageView);
     //this->device.destroyImageView(outputImageView);
     //this->device.destroyImage(inputImage);
@@ -121,7 +122,7 @@ vk::DescriptorSetLayout toy2d::Cumpute::createdescriptorSetLayout()
 		),
 		vk::DescriptorSetLayoutBinding(
 			1, // binding
-			vk::DescriptorType::eStorageImage, // descriptor type
+			vk::DescriptorType::eStorageBuffer, // descriptor type
 			1, // descriptor count
 			vk::ShaderStageFlagBits::eCompute // stage flags
 		)

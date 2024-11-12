@@ -13,7 +13,7 @@ namespace toy2d {
 		Cumpute(const std::string& shaderpath);
 		~Cumpute() = default;
 
-		void run_comput(const Texture& inputtexture, Texture& outputtexture);
+		void run_comput(const Texture& inputtexture, Buffer& outputbuffer);
 
 	private:
 		vk::Instance instance;

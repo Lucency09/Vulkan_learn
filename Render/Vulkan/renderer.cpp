@@ -1,6 +1,7 @@
 #include "Render/Vulkan/include/renderer.hpp"
 #include "Render/Vulkan/include/context.hpp"
 
+
 namespace toy2d
 {
     Renderer::Renderer()
@@ -329,19 +330,22 @@ namespace toy2d
         this->sampler = Context::GetInstance().get_device().createSampler(createInfo);
     }
 
+
+
     void Renderer::createTexture(std::string TexPath)
     {
-        //dxt纹理缓冲
-        std::unique_ptr<Buffer> dxt_buffer(new Buffer(592 * 593 *4 ,
-            vk::BufferUsageFlagBits::eTransferSrc,
-            vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible));
-        std::unique_ptr<toy2d::Texture> rgb_tex = std::make_unique<toy2d::Texture>(TexPath);
-        std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>(592, 593, 4, *dxt_buffer);
+        std::unique_ptr<Buffer> dxt_buffer(new Buffer(592 * 593 * 4 ,
+            vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eStorageBuffer,
+            vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible));//dxt纹理缓冲
+        std::unique_ptr<toy2d::Texture> rgb_tex = std::make_unique<toy2d::Texture>(TexPath);//输入纹理
 
-        toy2d::Cumpute cumpute("res/Spir-v/dxt_encode.spv");
-        cumpute.run_comput(*rgb_tex, *dxt_tex);
+        toy2d::Cumpute cumpute("res/Spir-v/dxt_encode.spv");//创建cumpute对象
+        cumpute.run_comput(*rgb_tex, *dxt_buffer);//运行cumpute程序，将rgb纹理转换为dxt纹理
 
-        this->texture = std::move(dxt_tex);
+
+        std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>(592, 523, 4, *dxt_buffer);//通过dxt_buffer创建dxt纹理
+
+        this->texture = std::move(rgb_tex);
     }
 
     void Renderer::copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset)
@@ -406,7 +410,7 @@ namespace toy2d
             vk::RenderPassBeginInfo renderPassBegin;
             vk::Rect2D area;
             vk::ClearValue clearValue;
-            clearValue.color = vk::ClearColorValue(std::array<float, 4>{0.3f, 0.2f, 0.1f, 0.0f});
+            clearValue.color = vk::ClearColorValue(std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f});
 
             area.setOffset({})
                 .setExtent(swapchain->get_info().imageExtent);//设置屏幕大小，从swapchain中获取
