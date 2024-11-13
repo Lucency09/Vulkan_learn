@@ -25,6 +25,7 @@ namespace toy2d {
 		vk::PipelineLayout piplinelayout;
 		vk::Pipeline pipeline;
 		vk::CommandPool commandPool;
+		vk::Sampler sampler;
 		std::string shadersource;
 
 		vk::ShaderModule createShaderModule(vk::Device device, const std::string& shadersource);
@@ -32,6 +33,7 @@ namespace toy2d {
 		vk::Pipeline createCumputePipline();
 		vk::DescriptorSetLayout createdescriptorSetLayout();
 		vk::CommandPool createCommandPool();
+		vk::Sampler createSampler();
 
 		//void init();
 		

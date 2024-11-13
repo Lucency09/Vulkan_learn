@@ -334,7 +334,7 @@ namespace toy2d
 
     void Renderer::createTexture(std::string TexPath)
     {
-        std::unique_ptr<Buffer> dxt_buffer(new Buffer(592 * 593 * 4 ,
+        std::unique_ptr<Buffer> dxt_buffer(new Buffer(592 * 523 * 4 ,
             vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eStorageBuffer,
             vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible));//dxt纹理缓冲
         std::unique_ptr<toy2d::Texture> rgb_tex = std::make_unique<toy2d::Texture>(TexPath);//输入纹理
@@ -345,7 +345,7 @@ namespace toy2d
 
         std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>(592, 523, 4, *dxt_buffer);//通过dxt_buffer创建dxt纹理
 
-        this->texture = std::move(rgb_tex);
+        this->texture = std::move(dxt_tex);
     }
 
     void Renderer::copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset)

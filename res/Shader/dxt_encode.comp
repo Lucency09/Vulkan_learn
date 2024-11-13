@@ -1,6 +1,6 @@
 #version 450
 
-layout(binding = 0, rgba8) uniform image2D inputImage;
+layout(binding = 0) uniform sampler2D inputImage;
 layout(binding = 1) buffer OutputBuffer {
     uint data[];
 } outputbuffer;
@@ -10,11 +10,21 @@ layout(local_size_x = 16, local_size_y = 16) in;
 // 声明共享内存
 shared uint sharedData[16 * 16];
 
+//
+
 void main()
 {
     ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
-    vec4 color = imageLoad(inputImage, coords);
-    uvec4 ucolor = uvec4(round(color * 255.0)); // 将颜色转换为无符号整数
+    ivec2 imgSize = textureSize(inputImage, 0);
+
+    // 将像素坐标转换为归一化坐标
+    vec2 texCoords = vec2(coords) / vec2(imgSize);
+    vec4 color = texture(inputImage, texCoords);
+
+    // 使用更高精度的计算
+    vec4 adjustedColor = max(color, vec4(1.0 / 255.0));
+    vec4 highPrecisionColor = adjustedColor * 255.0;
+    uvec4 ucolor = uvec4(roundEven(highPrecisionColor));
 
     // 将 uvec4 转换为 uint
     uint packedColor = (ucolor.r & 0xFF) |
@@ -25,15 +35,17 @@ void main()
     // 计算共享内存的索引
     int localIndex = int(gl_LocalInvocationID.y * 16 + gl_LocalInvocationID.x);
 
+    
+
     // 将数据写入共享内存
     sharedData[localIndex] = packedColor;
 
     // 添加内存屏障，确保写操作完成
-    //memoryBarrierShared();
-    //barrier();
+    memoryBarrierShared();
+    barrier();
 
     // 获取图像的宽度和高度
-    ivec2 imgSize = imageSize(inputImage);
+    //ivec2 imgSize = imageSize(inputImage);
     int globalIndex = coords.y * imgSize.x + coords.x; // 计算全局内存的索引
 
     // 将共享内存的数据写入全局内存

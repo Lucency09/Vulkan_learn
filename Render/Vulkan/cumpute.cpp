@@ -11,6 +11,7 @@ toy2d::Cumpute::Cumpute()
 	this->descriptorSetLayout = this->createdescriptorSetLayout();
 	this->piplinelayout = this->createpiplinelayout();
 	this->pipeline = this->createCumputePipline();
+    this->sampler = this->createSampler();
 }
 
 toy2d::Cumpute::Cumpute(const std::string& shaderpath)
@@ -23,6 +24,7 @@ toy2d::Cumpute::Cumpute(const std::string& shaderpath)
 	this->piplinelayout = this->createpiplinelayout();
 	this->pipeline = this->createCumputePipline();
     this->commandPool = this->createCommandPool();
+	this->sampler = this->createSampler();
 }
 
 
@@ -41,7 +43,7 @@ void toy2d::Cumpute::run_comput(const Texture& inputtexture, Buffer& outputbuffe
     vk::DescriptorSet descriptorSet = this->device.allocateDescriptorSets(allocInfo).front();
 
     // 更新描述符集
-    vk::DescriptorImageInfo inputImageInfo({}, inputtexture.view, vk::ImageLayout::eGeneral);
+    vk::DescriptorImageInfo inputImageInfo(this->sampler, inputtexture.view, vk::ImageLayout::eGeneral);
     vk::DescriptorBufferInfo outputBufferInfo(outputbuffer.buffer, 0, VK_WHOLE_SIZE);
 
     std::array<vk::WriteDescriptorSet, 2> descriptorWrites = {
@@ -50,7 +52,7 @@ void toy2d::Cumpute::run_comput(const Texture& inputtexture, Buffer& outputbuffe
             0, // dstBinding
             0, // dstArrayElement
             1, // descriptorCount
-            vk::DescriptorType::eStorageImage, // descriptorType
+            vk::DescriptorType::eCombinedImageSampler, // descriptorType
             &inputImageInfo, // pImageInfo
             nullptr, // pBufferInfo
             nullptr // pTexelBufferView
@@ -93,10 +95,6 @@ void toy2d::Cumpute::run_comput(const Texture& inputtexture, Buffer& outputbuffe
 
     this->device.freeCommandBuffers(this->commandPool, commandBuffer);
     this->device.destroyDescriptorPool(descriptorPool);
-    //this->device.destroyImageView(inputImageView);
-    //this->device.destroyImageView(outputImageView);
-    //this->device.destroyImage(inputImage);
-    //this->device.destroyImage(outputImage);
 
 }
 
@@ -116,7 +114,7 @@ vk::DescriptorSetLayout toy2d::Cumpute::createdescriptorSetLayout()
 	std::array<vk::DescriptorSetLayoutBinding, 2> layoutBindings = {
 		vk::DescriptorSetLayoutBinding(
 			0, // binding
-			vk::DescriptorType::eStorageImage, // descriptor type
+            vk::DescriptorType::eCombinedImageSampler, // descriptor type
 			1, // descriptor count
 			vk::ShaderStageFlagBits::eCompute // stage flags
 		),
@@ -149,4 +147,27 @@ vk::CommandPool toy2d::Cumpute::createCommandPool()
 {
     vk::CommandPoolCreateInfo poolInfo({}, 0); // 0 是队列族索引，你需要根据实际情况设置
     return this->device.createCommandPool(poolInfo);
+}
+
+vk::Sampler toy2d::Cumpute::createSampler()
+{
+    vk::SamplerCreateInfo createInfo;
+    createInfo
+        //.setMagFilter(vk::Filter::eNearest)//放大时使用最近点采样,适配无符号整形纹理
+        //.setMinFilter(vk::Filter::eNearest)//缩小时使用最近点采样
+        .setMagFilter(vk::Filter::eLinear)//设置放大后采样方式，这里是就临近点直接取样
+        .setMinFilter(vk::Filter::eLinear)//设置缩小后采样方式，这里是就临近点直接取样
+        .setAddressModeU(vk::SamplerAddressMode::eRepeat)//设置U轴的寻址模式，如果采样坐标超出纹理区域，这里是重复
+        .setAddressModeV(vk::SamplerAddressMode::eRepeat)
+        .setAddressModeW(vk::SamplerAddressMode::eRepeat)
+        .setAnisotropyEnable(false)//是否启用各向异性过滤，这里是不启用
+        //.setMaxAnisotropy(16)//各向异性过滤的最大值，这里是16
+        .setBorderColor(vk::BorderColor::eIntOpaqueBlack)//设置边界颜色，这里是不透明黑色，由于是寻址模式为重复，所以不会显示
+        .setUnnormalizedCoordinates(false)//是否使用非归一化坐标，这里是不使用
+        .setCompareEnable(false)//是否启用颜色比较，这里是不启用
+        //.setCompareOp(vk::CompareOp::eAlways)//设置颜色比较的方式，这里是总是通过
+        .setMipmapMode(vk::SamplerMipmapMode::eLinear);//设置mipmap采样方式，这里是线性插值
+    //.setMipmapMode(vk::SamplerMipmapMode::eNearest); //设置mipmap采样方式,这里是就近
+    return Context::GetInstance().get_device().createSampler(createInfo);
+   
 }
