@@ -6,7 +6,7 @@
 
 namespace toy2d {
 
-    Texture::Texture(std::string_view filename) {
+    Texture::Texture(std::string_view filename, const vk::Format& format) {
         int w, h, channel;
         stbi_uc* pixels = stbi_load(filename.data(), &w, &h, &channel, STBI_rgb_alpha);//强制转换为4通道
         size_t size = w * h * 4;
@@ -24,7 +24,7 @@ namespace toy2d {
         stbi_image_free(pixels);
         Context::GetInstance().get_device().unmapMemory(rbg_buffer->memory);//解除映射
 
-        createImage(w, h, vk::Format::eR8G8B8A8Unorm);
+        createImage(w, h, format);
         allocMemory();
         Context::GetInstance().get_device().bindImageMemory(this->image, this->memory, 0);//绑定内存,对应bindBufferMemory
 
@@ -32,14 +32,14 @@ namespace toy2d {
         transformData2Image(*rbg_buffer, w, h);//将数据传输到图像
         transitionImageLayoutFromDst2Optimal();//第二次转换布局，从传输目标到着色器只读，使能着色器读取
 
-        createImageView(vk::Format::eR8G8B8A8Unorm);
+        createImageView(format);
     }
 
-    Texture::Texture(int w, int h, int len, Buffer& buffer)
+    Texture::Texture(int w, int h, int len, Buffer& buffer, const vk::Format& format)
     {
         size_t size = w * h * len;
 
-        createImage(w, h, vk::Format::eR8G8B8A8Unorm);
+        createImage(w, h, format);
         allocMemory();
         Context::GetInstance().get_device().bindImageMemory(this->image, this->memory, 0);//绑定内存,对应bindBufferMemory
 
@@ -47,7 +47,7 @@ namespace toy2d {
         transformData2Image(buffer, w, h);//将数据传输到图像
         transitionImageLayoutFromDst2Optimal();//第二次转换布局，从传输目标到着色器只读，使能着色器读取
 
-        createImageView(vk::Format::eR8G8B8A8Unorm);
+        createImageView(format);
     }
 
     Texture::~Texture() {
@@ -67,7 +67,7 @@ namespace toy2d {
             .setTiling(vk::ImageTiling::eOptimal)//指定为最优化内存布局
             .setInitialLayout(vk::ImageLayout::eUndefined)
             //                                              用于传输数据到图像           用于着色器读取(与shader中Sampler关键字对应)
-            .setUsage(vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled)
+            .setUsage(vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled)
             //.setUsage(vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled)
             .setSamples(vk::SampleCountFlagBits::e1);//采样数(这里设置为对本身采样)
         this->image = Context::GetInstance().get_device().createImage(createInfo);

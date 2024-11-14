@@ -82,8 +82,8 @@ void toy2d::Cumpute::run_comput(const Texture& inputtexture, Buffer& outputbuffe
     //commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, this->piplinelayout, 0, descriptorSet, nullptr);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, this->piplinelayout, 0, 1, &descriptorSet, 0, nullptr);
 
-    // 调用计算着色器
-    commandBuffer.dispatch((uint32_t)ceil(WINDOWS_WIDTH / float(16)), (uint32_t)ceil(WINDOWS_HIGHT / float(16)), 1);
+    // 调用计算着色器,指定工作簇尺寸
+    commandBuffer.dispatch((uint32_t)ceil(WINDOWS_WIDTH / float(4)), (uint32_t)ceil(WINDOWS_HIGHT / float(4)), 1);
 
     commandBuffer.end();
 

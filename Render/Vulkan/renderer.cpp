@@ -337,13 +337,13 @@ namespace toy2d
         std::unique_ptr<Buffer> dxt_buffer(new Buffer(592 * 523 * 4 ,
             vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eStorageBuffer,
             vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible));//dxt纹理缓冲
-        std::unique_ptr<toy2d::Texture> rgb_tex = std::make_unique<toy2d::Texture>(TexPath);//输入纹理
+        std::unique_ptr<toy2d::Texture> rgb_tex = std::make_unique<toy2d::Texture>(TexPath, vk::Format::eR8G8B8A8Unorm);//输入纹理
 
         toy2d::Cumpute cumpute("res/Spir-v/dxt_encode.spv");//创建cumpute对象
         cumpute.run_comput(*rgb_tex, *dxt_buffer);//运行cumpute程序，将rgb纹理转换为dxt纹理
 
 
-        std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>(592, 523, 4, *dxt_buffer);//通过dxt_buffer创建dxt纹理
+        std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>(592, 523, 4, *dxt_buffer, vk::Format::eBc5UnormBlock);//通过dxt_buffer创建dxt纹理
 
         this->texture = std::move(dxt_tex);
     }

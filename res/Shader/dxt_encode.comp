@@ -5,12 +5,33 @@ layout(binding = 1) buffer OutputBuffer {
     uint data[];
 } outputbuffer;
 
-layout(local_size_x = 16, local_size_y = 16) in;
+layout(local_size_x = 4, local_size_y = 4) in;
 
 // 声明共享内存
 shared uint sharedData[16 * 16];
 
-//
+//生成rgba8u的颜色块
+uvec4 get_rgba8u(vec4 color)
+{
+	vec4 adjustedColor = max(color, vec4(1.0 / 255.0));
+	vec4 highPrecisionColor = adjustedColor * 255.0;
+	uvec4 ucolor = uvec4(roundEven(highPrecisionColor));
+    ucolor.r = ucolor.r & 0xFF;
+    ucolor.g = (ucolor.g & 0xFF) << 8;
+    ucolor.b = (ucolor.b & 0xFF) << 16;
+    ucolor.a = (ucolor.a & 0xFF) << 24;
+	return ucolor;
+}
+
+//rgba8u转换rgb565u
+uvec3 rgba8u_to_rgb565u(uvec4 rgba8u)
+{
+	uvec3 rgb565u;
+    rgb565u.r = (rgba8u.r & 0xF8);
+    rgb565u.g = (rgba8u.g & 0xFC00);
+    rgb565u.b = (rgba8u.b & 0xF80000);
+    return rgb565u;
+}
 
 void main()
 {
@@ -21,16 +42,11 @@ void main()
     vec2 texCoords = vec2(coords) / vec2(imgSize);
     vec4 color = texture(inputImage, texCoords);
 
-    // 使用更高精度的计算
-    vec4 adjustedColor = max(color, vec4(1.0 / 255.0));
-    vec4 highPrecisionColor = adjustedColor * 255.0;
-    uvec4 ucolor = uvec4(roundEven(highPrecisionColor));
+    uvec4 rgba8ucolor = get_rgba8u(color);//将浮点颜色转换为rgba8u颜色
+    uvec3 rgb565ucolor = rgba8u_to_rgb565u(rgba8ucolor);//将rgba8u颜色转换为rgb565u颜色
 
-    // 将 uvec4 转换为 uint
-    uint packedColor = (ucolor.r & 0xFF) |
-                       ((ucolor.g & 0xFF) << 8) |
-                       ((ucolor.b & 0xFF) << 16) |
-                       ((ucolor.a & 0xFF) << 24);
+    // 生成一个32位的颜色值
+    uint packedColor = rgb565ucolor.r | rgb565ucolor.g | rgb565ucolor.b | rgba8ucolor.a;
 
     // 计算共享内存的索引
     int localIndex = int(gl_LocalInvocationID.y * 16 + gl_LocalInvocationID.x);
@@ -41,13 +57,10 @@ void main()
     sharedData[localIndex] = packedColor;
 
     // 添加内存屏障，确保写操作完成
-    memoryBarrierShared();
-    barrier();
+    //memoryBarrierShared();
+    //barrier();
 
-    // 获取图像的宽度和高度
-    //ivec2 imgSize = imageSize(inputImage);
     int globalIndex = coords.y * imgSize.x + coords.x; // 计算全局内存的索引
-
     // 将共享内存的数据写入全局内存
-    outputbuffer.data[globalIndex] = sharedData[localIndex];
+    outputbuffer.data[globalIndex] = packedColor;
 }
