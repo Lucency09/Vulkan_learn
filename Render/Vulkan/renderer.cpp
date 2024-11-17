@@ -316,9 +316,9 @@ namespace toy2d
             //.setMinFilter(vk::Filter::eNearest)//缩小时使用最近点采样
             .setMagFilter(vk::Filter::eLinear)//设置放大后采样方式，这里是就临近点直接取样
             .setMinFilter(vk::Filter::eLinear)//设置缩小后采样方式，这里是就临近点直接取样
-            .setAddressModeU(vk::SamplerAddressMode::eRepeat)//设置U轴的寻址模式，如果采样坐标超出纹理区域，这里是重复
-            .setAddressModeV(vk::SamplerAddressMode::eRepeat)
-            .setAddressModeW(vk::SamplerAddressMode::eRepeat)
+            .setAddressModeU(vk::SamplerAddressMode::eMirroredRepeat)//设置U轴的寻址模式，如果采样坐标超出纹理区域，这里是重复
+            .setAddressModeV(vk::SamplerAddressMode::eMirroredRepeat)
+            .setAddressModeW(vk::SamplerAddressMode::eMirroredRepeat)
             .setAnisotropyEnable(false)//是否启用各向异性过滤，这里是不启用
             //.setMaxAnisotropy(16)//各向异性过滤的最大值，这里是16
             .setBorderColor(vk::BorderColor::eIntOpaqueBlack)//设置边界颜色，这里是不透明黑色，由于是寻址模式为重复，所以不会显示
@@ -334,6 +334,7 @@ namespace toy2d
 
     void Renderer::createTexture(std::string TexPath)
     {
+        //rgba是592 * 523 * 4, BC3是((592 * 523) / 16 + 1) * 8 
         std::unique_ptr<Buffer> dxt_buffer(new Buffer(592 * 523 * 4 ,
             vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eStorageBuffer,
             vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible));//dxt纹理缓冲
@@ -343,8 +344,9 @@ namespace toy2d
         cumpute.run_comput(*rgb_tex, *dxt_buffer);//运行cumpute程序，将rgb纹理转换为dxt纹理
 
 
-        std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>(592, 523, 4, *dxt_buffer, vk::Format::eBc5UnormBlock);//通过dxt_buffer创建dxt纹理
-
+        //std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>(592, 523, 4, *dxt_buffer, vk::Format::eBc5UnormBlock);//通过dxt_buffer创建dxt纹理
+        std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>(592, 523, 4, *dxt_buffer, vk::Format::eR8G8B8A8Unorm);
+        
         this->texture = std::move(dxt_tex);
     }
 

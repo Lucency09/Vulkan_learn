@@ -8,7 +8,15 @@ layout(binding = 1) buffer OutputBuffer {
 layout(local_size_x = 4, local_size_y = 4) in;
 
 // 声明共享内存
-shared uint sharedData[16 * 16];
+shared uvec4 shared_rgba_Color[4 * 4];//4*4个像素
+shared uvec4 shared_ucolor_inter[4];//插值颜色
+
+// 计算工作组内存的索引,计算全局内存的索引
+ivec2 globalcoords = ivec2(gl_GlobalInvocationID.xy);
+ivec2 localcoords = ivec2(gl_LocalInvocationID.xy);
+ivec2 imgSize = textureSize(inputImage, 0);
+int localIndex = int(localcoords.y * 4 + localcoords.x);
+int globalIndex = globalcoords.y * imgSize.x + globalcoords.x; 
 
 //生成rgba8u的颜色块
 uvec4 get_rgba8u(vec4 color)
@@ -16,10 +24,6 @@ uvec4 get_rgba8u(vec4 color)
 	vec4 adjustedColor = max(color, vec4(1.0 / 255.0));
 	vec4 highPrecisionColor = adjustedColor * 255.0;
 	uvec4 ucolor = uvec4(roundEven(highPrecisionColor));
-    ucolor.r = ucolor.r & 0xFF;
-    ucolor.g = (ucolor.g & 0xFF) << 8;
-    ucolor.b = (ucolor.b & 0xFF) << 16;
-    ucolor.a = (ucolor.a & 0xFF) << 24;
 	return ucolor;
 }
 
@@ -28,39 +32,67 @@ uvec3 rgba8u_to_rgb565u(uvec4 rgba8u)
 {
 	uvec3 rgb565u;
     rgb565u.r = (rgba8u.r & 0xF8);
-    rgb565u.g = (rgba8u.g & 0xFC00);
-    rgb565u.b = (rgba8u.b & 0xF80000);
+    rgb565u.g = (rgba8u.g & 0xFC);
+    rgb565u.b = (rgba8u.b & 0xF8);
     return rgb565u;
+}
+
+//更新插值颜色
+void update_inter_color(uvec4 rgba8ucolor)
+{
+	//初始化插值颜色
+    shared_ucolor_inter[0] = uvec4(0, 0, 0, 0);
+    shared_ucolor_inter[1] = uvec4(255, 255, 255, 255);
+    barrier();
+
+    //更新插值颜色color0 color1及alpha0 alpha1
+    atomicMax(shared_ucolor_inter[0].r, rgba8ucolor.r);
+    atomicMax(shared_ucolor_inter[0].g, rgba8ucolor.g);
+    atomicMax(shared_ucolor_inter[0].b, rgba8ucolor.b);
+    atomicMax(shared_ucolor_inter[0].a, rgba8ucolor.a);
+
+    atomicMin(shared_ucolor_inter[1].r, rgba8ucolor.r);
+    atomicMin(shared_ucolor_inter[1].g, rgba8ucolor.g);
+    atomicMin(shared_ucolor_inter[1].b, rgba8ucolor.b);
+    atomicMin(shared_ucolor_inter[1].a, rgba8ucolor.a);
+    barrier();
+
+    //更新插值颜色color2 color3(alpha2 alpha3无效)
+    if(localcoords % 4 == ivec2(0, 0))//工作组内仅一个线程更新
+    {
+        shared_ucolor_inter[2] = 2 / 3 * shared_ucolor_inter[0] + 1 / 3 * shared_ucolor_inter[1];
+        shared_ucolor_inter[3] = 1 / 3 * shared_ucolor_inter[1] + 2 / 3 * shared_ucolor_inter[0];
+	}
+    barrier();
+
+    //更新alpha2 alpha3
+    
 }
 
 void main()
 {
-    ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
-    ivec2 imgSize = textureSize(inputImage, 0);
-
     // 将像素坐标转换为归一化坐标
-    vec2 texCoords = vec2(coords) / vec2(imgSize);
+    vec2 texCoords = vec2(globalcoords) / vec2(imgSize);
+
+    //读取当前像素颜色
     vec4 color = texture(inputImage, texCoords);
+    uvec4 rgba8ucolor = get_rgba8u(color);
 
-    uvec4 rgba8ucolor = get_rgba8u(color);//将浮点颜色转换为rgba8u颜色
-    uvec3 rgb565ucolor = rgba8u_to_rgb565u(rgba8ucolor);//将rgba8u颜色转换为rgb565u颜色
+    //更新插值颜色
+    update_inter_color(rgba8ucolor);
 
-    // 生成一个32位的颜色值
-    uint packedColor = rgb565ucolor.r | rgb565ucolor.g | rgb565ucolor.b | rgba8ucolor.a;
-
-    // 计算共享内存的索引
-    int localIndex = int(gl_LocalInvocationID.y * 16 + gl_LocalInvocationID.x);
-
+    // 将浮点颜色转换为rgba8u颜色,将颜色值写入共享内存
+    shared_rgba_Color[localIndex] = rgba8ucolor;
     
 
-    // 将数据写入共享内存
-    sharedData[localIndex] = packedColor;
+    //将rgba8u颜色转换为rgb565u颜色
+    uvec3 rgb565ucolor = rgba8u_to_rgb565u(rgba8ucolor);
 
-    // 添加内存屏障，确保写操作完成
-    //memoryBarrierShared();
-    //barrier();
+    // 生成一个32位的颜色值
+    uint packedColor = rgb565ucolor.r | (rgb565ucolor.g  << 8) | (rgb565ucolor.b << 16) | (rgba8ucolor.a << 24);
 
-    int globalIndex = coords.y * imgSize.x + coords.x; // 计算全局内存的索引
+    
     // 将共享内存的数据写入全局内存
     outputbuffer.data[globalIndex] = packedColor;
+    //outputbuffer.data[globalIndex] = shared_rgba_Color[localIndex];
 }
