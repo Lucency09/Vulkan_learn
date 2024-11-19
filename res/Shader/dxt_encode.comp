@@ -2,7 +2,7 @@
 
 layout(binding = 0) uniform sampler2D inputImage;
 layout(binding = 1)buffer OutputBuffer {
-    uint data[];
+    uvec4 data[];
 } outputbuffer;
 
 layout(local_size_x = 4, local_size_y = 4) in;
@@ -58,53 +58,47 @@ uint alpha_distance(uint alpha1, uint alpha2)
 //更新插值颜色及alpha
 void update_inter_color(uvec4 rgba8ucolor)
 {
-	//初始化插值颜色
-    shared_ucolor_inter[1] = uvec4(255, 255, 255, 255);
-    shared_ucolor_inter[0] = uvec4(0, 0, 0, 0);
+	// 初始化插值颜色
+    shared_ucolor_inter[0] = uvec4(255, 255, 255, 255);
+    shared_ucolor_inter[1] = uvec4(0, 0, 0, 0);
     barrier();
 
-    //更新插值颜色color0 color1及alpha0 alpha1
-    atomicMax(shared_ucolor_inter[0].r, rgba8ucolor.r);
-    atomicMax(shared_ucolor_inter[0].g, rgba8ucolor.g);
-    atomicMax(shared_ucolor_inter[0].b, rgba8ucolor.b);
-    atomicMax(shared_ucolor_inter[0].a, rgba8ucolor.a);
+    // 更新插值颜色 color0 color1 及 alpha0 alpha1
+    atomicMax(shared_ucolor_inter[1].r, rgba8ucolor.r);
+    atomicMax(shared_ucolor_inter[1].g, rgba8ucolor.g);
+    atomicMax(shared_ucolor_inter[1].b, rgba8ucolor.b);
+    atomicMax(shared_ucolor_inter[1].a, rgba8ucolor.a);
 
-    atomicMin(shared_ucolor_inter[1].r, rgba8ucolor.r);
-    atomicMin(shared_ucolor_inter[1].g, rgba8ucolor.g);
-    atomicMin(shared_ucolor_inter[1].b, rgba8ucolor.b);
-    atomicMin(shared_ucolor_inter[1].a, rgba8ucolor.a);
+    atomicMin(shared_ucolor_inter[0].r, rgba8ucolor.r);
+    atomicMin(shared_ucolor_inter[0].g, rgba8ucolor.g);
+    atomicMin(shared_ucolor_inter[0].b, rgba8ucolor.b);
+    atomicMin(shared_ucolor_inter[0].a, rgba8ucolor.a);
     barrier();
 
-    //更新插值颜色color2 color3,更新插值alpha0 alpha1
-    if(localcoords % 4 == ivec2(0, 0))//工作组内仅一个线程更新
-    {
-        shared_ucolor_inter[2] = 2 / 3 * shared_ucolor_inter[0] + 1 / 3 * shared_ucolor_inter[1];
-        shared_ucolor_inter[3] = 1 / 3 * shared_ucolor_inter[1] + 2 / 3 * shared_ucolor_inter[0];
+    // 更新插值颜色 color2 color3, 更新插值 alpha0 alpha1
+    if (localcoords == ivec2(0, 0)) { // 工作组内仅一个线程更新
+        shared_ucolor_inter[2] = 2 * shared_ucolor_inter[0] / 3 + shared_ucolor_inter[1] / 3;
+        shared_ucolor_inter[3] = shared_ucolor_inter[0] / 3 + 2 * shared_ucolor_inter[1] / 3;
         shared_ualpha_inter[0] = shared_ucolor_inter[0].a;
         shared_ualpha_inter[1] = shared_ucolor_inter[1].a;
-	}
-    else if(localcoords % 4 == ivec2(0, 1))//工作组内仅一个线程更新
-    {
-        //更新alpha
-        if( shared_ualpha_inter[0] > shared_ualpha_inter[1] )
-        {
-            // 6 interpolated alpha values.
-            shared_ualpha_inter[2] = 6/7*shared_ucolor_inter[0].a + 1/7*shared_ucolor_inter[1].a; // bit code 010
-            shared_ualpha_inter[3] = 5/7*shared_ucolor_inter[0].a + 2/7*shared_ucolor_inter[1].a; // bit code 011
-            shared_ualpha_inter[4] = 4/7*shared_ucolor_inter[0].a + 3/7*shared_ucolor_inter[1].a; // bit code 100
-            shared_ualpha_inter[5] = 3/7*shared_ucolor_inter[0].a + 4/7*shared_ucolor_inter[1].a; // bit code 101
-            shared_ualpha_inter[6] = 2/7*shared_ucolor_inter[0].a + 5/7*shared_ucolor_inter[1].a; // bit code 110
-            shared_ualpha_inter[7] = 1/7*shared_ucolor_inter[0].a + 6/7*shared_ucolor_inter[1].a; // bit code 111
-        }
-        else
-        {
-            // 4 interpolated alpha values.
-            shared_ualpha_inter[2] = 4/5*shared_ucolor_inter[0].a + 1/5*shared_ucolor_inter[1].a; // bit code 010
-            shared_ualpha_inter[3] = 3/5*shared_ucolor_inter[0].a + 2/5*shared_ucolor_inter[1].a; // bit code 011
-            shared_ualpha_inter[4] = 2/5*shared_ucolor_inter[0].a + 3/5*shared_ucolor_inter[1].a; // bit code 100
-            shared_ualpha_inter[5] = 1/5*shared_ucolor_inter[0].a + 4/5*shared_ucolor_inter[1].a; // bit code 101
-            shared_ualpha_inter[6] = 0;                         // bit code 110
-            shared_ualpha_inter[7] = 255;                       // bit code 111
+    } else if (localcoords == ivec2(0, 1)) { // 工作组内仅一个线程更新
+        // 更新 alpha
+        if (shared_ualpha_inter[0] > shared_ualpha_inter[1]) {
+            // 6 interpolated alpha values
+            shared_ualpha_inter[2] = 6 * shared_ucolor_inter[0].a / 7 + shared_ucolor_inter[1].a / 7;
+            shared_ualpha_inter[3] = 5 * shared_ucolor_inter[0].a / 7 + 2 * shared_ucolor_inter[1].a / 7;
+            shared_ualpha_inter[4] = 4 * shared_ucolor_inter[0].a / 7 + 3 * shared_ucolor_inter[1].a / 7;
+            shared_ualpha_inter[5] = 3 * shared_ucolor_inter[0].a / 7 + 4 * shared_ucolor_inter[1].a / 7;
+            shared_ualpha_inter[6] = 2 * shared_ucolor_inter[0].a / 7 + 5 * shared_ucolor_inter[1].a / 7;
+            shared_ualpha_inter[7] = shared_ucolor_inter[0].a / 7 + 6 * shared_ucolor_inter[1].a / 7;
+        } else {
+            // 4 interpolated alpha values
+            shared_ualpha_inter[2] = 4 * shared_ucolor_inter[0].a / 5 + shared_ucolor_inter[1].a / 5;
+            shared_ualpha_inter[3] = 3 * shared_ucolor_inter[0].a / 5 + 2 * shared_ucolor_inter[1].a / 5;
+            shared_ualpha_inter[4] = 2 * shared_ucolor_inter[0].a / 5 + 3 * shared_ucolor_inter[1].a / 5;
+            shared_ualpha_inter[5] = shared_ucolor_inter[0].a / 5 + 4 * shared_ucolor_inter[1].a / 5;
+            shared_ualpha_inter[6] = 0;
+            shared_ualpha_inter[7] = 255;
         }
     }
     barrier();
@@ -160,15 +154,38 @@ void fill_shared_outputbuffer()
     }
     barrier();
 
+    //更新alpha索引
     uint alpha_idx = get_alpha_index(shared_rgba_Color[localIndex].a);
-    if(localIndex < 4)
+    if(localIndex == 3)//更新alpha3
 	{
-		shared_outputbuffer.r = (shared_outputbuffer.r & 0xFFFF0000) | ((alpha_idx & 0x7) <<(3 * (1)));
+        //更新.a部分
+		uint value = alpha_idx >> 1;
+		// 使用原子或更新共享变量的特定位
+        atomicOr(shared_outputbuffer.a, value);
+
+        //更新.b部分
+		value = alpha_idx << 30;
+        atomicOr(shared_outputbuffer.b, value);
 	}
-	else
+	else if(localIndex < 3)
 	{
-		shared_outputbuffer.g = (shared_outputbuffer.r & 0xFF00FFFF) | (alpha_idx << 16);
+		uint value = alpha_idx << (3 * 8 + localIndex * 3);
+        atomicOr(shared_outputbuffer.b, value);
 	}
+    else if(localIndex > 3 && localIndex < 8)
+	{
+		uint value = alpha_idx << (2 + 3 * (localIndex - 4));
+        atomicOr(shared_outputbuffer.a, value);
+	}
+    else if(localIndex > 8)
+	{
+		uint value = alpha_idx << (3 * (localIndex - 8));
+        atomicOr(shared_outputbuffer.b, value);
+	}
+
+    //更新颜色索引
+    uint color_idx = get_color_index(shared_rgba_Color[localIndex]);
+    atomicOr(shared_outputbuffer.r, color_idx << (localIndex * 2));
 }
 
 void main()
@@ -182,19 +199,20 @@ void main()
 
     //更新插值颜色
     update_inter_color(rgba8ucolor);
+    //更新共享输出缓冲区
+    fill_shared_outputbuffer();
 
     // 将浮点颜色转换为rgba8u颜色,将颜色值写入共享内存
     //shared_rgba_Color[localIndex] = rgba8ucolor;
     
 
     //将rgba8u颜色转换为rgb565u颜色
-    uvec3 rgb565ucolor = rgba8u_to_rgb565u(rgba8ucolor);
-
+    //uvec3 rgb565ucolor = rgba8u_to_rgb565u(rgba8ucolor);
     // 生成一个32位的颜色值
-    uint packedColor = rgb565ucolor.r | (rgb565ucolor.g  << 8) | (rgb565ucolor.b << 16) | (rgba8ucolor.a << 24);
+    //uint packedColor = rgb565ucolor.r | (rgb565ucolor.g  << 8) | (rgb565ucolor.b << 16) | (rgba8ucolor.a << 24);
 
     
     // 将共享内存的数据写入全局内存
-    outputbuffer.data[globalIndex] = packedColor;
-    //outputbuffer.data[globalIndex] = shared_rgba_Color[localIndex];
+    //outputbuffer.data[globalIndex] = packedColor;
+    outputbuffer.data[globalIndex] = shared_outputbuffer;
 }
