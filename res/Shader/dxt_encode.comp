@@ -139,10 +139,10 @@ uint get_color_index(uvec4 color)
 }
 
 //填充shareoutputbuffer
-void fill_shared_outputbuffer()
+void update_shared_outputbuffer()
 {
     //插值颜色及插值alpha
-	if(localcoords % 4 == ivec2(0, 0))//工作组内仅一个线程更新
+	if(localcoords == ivec2(0, 0))//工作组内仅一个线程更新
     {
         shared_outputbuffer.a = (shared_ualpha_inter[0] << 24) | (shared_ualpha_inter[1] << 16);
         
@@ -197,10 +197,14 @@ void main()
     vec4 color = texture(inputImage, texCoords);
     uvec4 rgba8ucolor = get_rgba8u(color);
 
+    //更新共享urgba颜色
+    shared_rgba_Color[localIndex] = rgba8ucolor;
+    barrier();
+
     //更新插值颜色
     update_inter_color(rgba8ucolor);
     //更新共享输出缓冲区
-    fill_shared_outputbuffer();
+    update_shared_outputbuffer();
 
     // 将浮点颜色转换为rgba8u颜色,将颜色值写入共享内存
     //shared_rgba_Color[localIndex] = rgba8ucolor;
@@ -213,6 +217,12 @@ void main()
 
     
     // 将共享内存的数据写入全局内存
-    //outputbuffer.data[globalIndex] = packedColor;
-    outputbuffer.data[globalIndex] = shared_outputbuffer;
+    //outputbuffer.data[globalIndex].r = packedColor;
+    barrier();
+    if (localcoords == ivec2(3, 3)) { // 工作组内仅一个线程更新
+        uint workGroupIndex = workGroupID.x + workGroupID.y * gl_NumWorkGroups.x;
+        outputbuffer.data[workGroupIndex] = shared_outputbuffer;
+    }
+    //outputbuffer.data[globalIndex] = rgba8ucolor;
+    //outputbuffer.data[globalIndex] = uvec4(0xb3ef1588,0x8c278caf,0x94bb0fb1,0x0fb746f0);
 }

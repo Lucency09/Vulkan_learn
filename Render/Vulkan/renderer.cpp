@@ -306,7 +306,7 @@ namespace toy2d
             i++;
         }
     }
-
+   
     void Renderer::createSampler()
     {
         //Context::GetInstance().get_phyDevice().getProperties().limits.maxSamplerAnisotropy;//获取硬件支持最大各向异性过滤值
@@ -320,7 +320,7 @@ namespace toy2d
             .setAddressModeV(vk::SamplerAddressMode::eMirroredRepeat)
             .setAddressModeW(vk::SamplerAddressMode::eMirroredRepeat)
             .setAnisotropyEnable(false)//是否启用各向异性过滤，这里是不启用
-            //.setMaxAnisotropy(16)//各向异性过滤的最大值，这里是16
+            .setMaxAnisotropy(16)//各向异性过滤的最大值，这里是16
             .setBorderColor(vk::BorderColor::eIntOpaqueBlack)//设置边界颜色，这里是不透明黑色，由于是寻址模式为重复，所以不会显示
             .setUnnormalizedCoordinates(false)//是否使用非归一化坐标，这里是不使用
             .setCompareEnable(false)//是否启用颜色比较，这里是不启用
@@ -334,8 +334,8 @@ namespace toy2d
 
     void Renderer::createTexture(std::string TexPath)
     {
-        //rgba是592 * 523 * 4, BC3是((592 * 523) / 16 + 1) * 8 
-        std::unique_ptr<Buffer> dxt_buffer(new Buffer(((592 * 523) / 16 + 1) * 8,
+        //rgba是592 * 523 * 4, BC3是((592 + 3) / 4 * (523 + 3) / 4) * 8 
+        std::unique_ptr<Buffer> dxt_buffer(new Buffer(((592 + 3) / 4 * (523 + 3) / 4) * 8,
             vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eStorageBuffer,
             vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible));//dxt纹理缓冲
         std::unique_ptr<toy2d::Texture> rgb_tex = std::make_unique<toy2d::Texture>(TexPath, vk::Format::eR8G8B8A8Unorm);//输入纹理
@@ -344,8 +344,8 @@ namespace toy2d
         cumpute.run_comput(*rgb_tex, *dxt_buffer);//运行cumpute程序，将rgb纹理转换为dxt纹理
 
 
-        std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>(592 / 4, 523 / 4, 8, *dxt_buffer, vk::Format::eBc3UnormBlock);//通过dxt_buffer创建dxt纹理
-        //std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>(592, 523, 4, *dxt_buffer, vk::Format::eR8G8B8A8Unorm);
+        std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>((592 + 3) / 4, (523 + 3) / 4, 8, *dxt_buffer, vk::Format::eBc3UnormBlock);//通过dxt_buffer创建dxt纹理
+        //std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>(592, 523 , 8, *dxt_buffer, vk::Format::eR8G8B8A8Unorm);
         
         this->texture = std::move(dxt_tex);
     }

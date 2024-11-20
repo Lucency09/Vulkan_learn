@@ -20,10 +20,11 @@ namespace toy2d {
         vk::Image image;
         vk::DeviceMemory memory;
         vk::ImageView view;
+        vk::Format format;
 
     private:
-        void createImage(uint32_t w, uint32_t h, vk::Format format);
-        void createImageView(vk::Format format);
+        void createImage(uint32_t w, uint32_t h);
+        void createImageView();
         void allocMemory();
         uint32_t queryImageMemoryIndex();
 

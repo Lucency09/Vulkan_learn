@@ -6,7 +6,9 @@
 
 namespace toy2d {
 
-    Texture::Texture(std::string_view filename, const vk::Format& format) {
+    Texture::Texture(std::string_view filename, const vk::Format& format) 
+        :format(format)
+    {
         int w, h, channel;
         stbi_uc* pixels = stbi_load(filename.data(), &w, &h, &channel, STBI_rgb_alpha);//强制转换为4通道
         size_t size = w * h * 4;
@@ -24,7 +26,7 @@ namespace toy2d {
         stbi_image_free(pixels);
         Context::GetInstance().get_device().unmapMemory(rbg_buffer->memory);//解除映射
 
-        createImage(w, h, format);
+        createImage(w, h);
         allocMemory();
         Context::GetInstance().get_device().bindImageMemory(this->image, this->memory, 0);//绑定内存,对应bindBufferMemory
 
@@ -32,14 +34,15 @@ namespace toy2d {
         transformData2Image(*rbg_buffer, w, h);//将数据传输到图像
         transitionImageLayoutFromDst2Optimal();//第二次转换布局，从传输目标到着色器只读，使能着色器读取
 
-        createImageView(format);
+        createImageView();
     }
 
     Texture::Texture(int w, int h, int len, Buffer& buffer, const vk::Format& format)
+        :format(format)
     {
         size_t size = w * h * len;
 
-        createImage(w, h, format);
+        createImage(w, h);
         allocMemory();
         Context::GetInstance().get_device().bindImageMemory(this->image, this->memory, 0);//绑定内存,对应bindBufferMemory
 
@@ -47,7 +50,7 @@ namespace toy2d {
         transformData2Image(buffer, w, h);//将数据传输到图像
         transitionImageLayoutFromDst2Optimal();//第二次转换布局，从传输目标到着色器只读，使能着色器读取
 
-        createImageView(format);
+        createImageView();
     }
 
     Texture::~Texture() {
@@ -57,13 +60,13 @@ namespace toy2d {
         device.destroyImage(this->image);
     }
 
-    void Texture::createImage(uint32_t w, uint32_t h, vk::Format format) {
+    void Texture::createImage(uint32_t w, uint32_t h) {
         vk::ImageCreateInfo createInfo;
         createInfo.setImageType(vk::ImageType::e2D)
             .setArrayLayers(1)
             .setMipLevels(1)
             .setExtent({ w, h, 1 })
-            .setFormat(format)
+            .setFormat(this->format)
             .setTiling(vk::ImageTiling::eOptimal)//指定为最优化内存布局
             .setInitialLayout(vk::ImageLayout::eUndefined)
             //                                              用于传输数据到图像           用于着色器读取(与shader中Sampler关键字对应)
@@ -152,7 +155,7 @@ namespace toy2d {
             });
     }
 
-    void Texture::createImageView(vk::Format format) {
+    void Texture::createImageView() {
         vk::ImageViewCreateInfo createInfo;
         vk::ComponentMapping mapping;
         vk::ImageSubresourceRange range;
@@ -164,7 +167,7 @@ namespace toy2d {
         createInfo.setImage(image)
             .setViewType(vk::ImageViewType::e2D)
             .setComponents(mapping)
-            .setFormat(format)
+            .setFormat(this->format)
             .setSubresourceRange(range);
         view = Context::GetInstance().get_device().createImageView(createInfo);
     }
