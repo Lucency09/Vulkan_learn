@@ -335,6 +335,7 @@ namespace toy2d
     void Renderer::createTexture(std::string TexPath)
     {
         //rgba是592 * 523 * 4, BC3是((592 + 3) / 4 * (523 + 3) / 4) * 8 
+        //std::unique_ptr<Buffer> dxt_buffer(new Buffer(592 * 523 * 4,
         std::unique_ptr<Buffer> dxt_buffer(new Buffer(((592 + 3) / 4 * (523 + 3) / 4) * 8,
             vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eStorageBuffer,
             vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible));//dxt纹理缓冲
@@ -344,8 +345,9 @@ namespace toy2d
         cumpute.run_comput(*rgb_tex, *dxt_buffer);//运行cumpute程序，将rgb纹理转换为dxt纹理
 
 
-        std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>((592 + 3) / 4, (523 + 3) / 4, 8, *dxt_buffer, vk::Format::eBc3UnormBlock);//通过dxt_buffer创建dxt纹理
-        //std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>(592, 523 , 8, *dxt_buffer, vk::Format::eR8G8B8A8Unorm);
+        std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>((592 + 3) / 4, (523 + 3) / 4, 8,
+            *dxt_buffer, vk::Format::eBc3UnormBlock);//通过dxt_buffer创建dxt纹理
+        //std::unique_ptr<toy2d::Texture> dxt_tex = std::make_unique<toy2d::Texture>(592, 523 , 4, *dxt_buffer, vk::Format::eR8G8B8A8Unorm);
         
         this->texture = std::move(dxt_tex);
     }
